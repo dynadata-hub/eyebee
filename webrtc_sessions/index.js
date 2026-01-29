@@ -1,10 +1,16 @@
+// Load environment variables
+require('dotenv').config();
+
+// Initialize logger
+const logger = require('./logger');
+
 process.on("SIGINT", () => {
-    console.log("exiting process");
+    logger.info("Received SIGINT, exiting process");
     process.exit();
 });
 
 process.on("SIGTERM", () => {
-    console.log("exiting process");
+    logger.info("Received SIGTERM, exiting process");
     process.exit();
 });
 
@@ -21,10 +27,24 @@ const memoryDBAPI = new MemoryDatabaseAPI();
 
 //Firebase Integration
 const admin = require('firebase-admin');
-const serviceAccount = require('./eyebee-718a0-a3b1cfaafefc.json');
+const fs = require('fs');
+
+// Load Firebase credentials from environment variable
+const credentialsPath = process.env.FIREBASE_CREDENTIALS_PATH || '../secrets/firebase-credentials.json';
+let serviceAccount;
+try {
+    serviceAccount = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
+    console.log('✓ Firebase credentials loaded successfully from:', credentialsPath);
+} catch (error) {
+    console.error('✗ Error loading Firebase credentials:', error.message);
+    console.error('  Make sure the file exists at:', credentialsPath);
+    process.exit(1);
+}
+
+const storageBucket = process.env.FIREBASE_STORAGE_BUCKET || 'eyebee-718a0.appspot.com';
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    storageBucket: 'eyebee-718a0.appspot.com'
+    storageBucket: storageBucket
 });
 const db = admin.firestore();
 const bucket = admin.storage().bucket();
@@ -205,6 +225,39 @@ app.use(helmet());
 app.use(bodyParser.json());
 
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Health check endpoint
+app.get("/health", (req, res) => {
+    try {
+        const healthStatus = {
+            status: 'healthy',
+            timestamp: new Date().toISOString(),
+            uptime: process.uptime(),
+            memory: {
+                used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
+                total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + 'MB'
+            },
+            environment: process.env.NODE_ENV || 'development',
+            service: process.env.SERVICE_NAME || 'webrtc_sessions',
+            version: require('./package.json').version || '0.5.0'
+        };
+        
+        console.log('Health check performed:', healthStatus);
+        res.status(200).json(healthStatus);
+    } catch (error) {
+        console.error('Health check error:', error);
+        res.status(503).json({
+            status: 'unhealthy',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+// Readiness check endpoint
+app.get("/ready", (req, res) => {
+    res.status(200).json({ ready: true });
+});
 
 app.get("/peers", (req, res) => {
 

@@ -58,7 +58,7 @@ services:
   #       max-size: "50m"
 
   admin_api:
-    image: node:14.16.0-alpine
+    image: node:20-alpine
     container_name: "admin-api"
     restart: always
     expose:
@@ -79,7 +79,7 @@ services:
 #quiza un bloque de auth
 
   webrtc_sessions:
-    image: node:14.16.0-alpine
+    image: node:20-alpine
     container_name: "webrtc_sessions"
     restart: always
     expose:
