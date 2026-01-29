@@ -1,0 +1,34 @@
+
+.hex-grid-main {
+  display:flex;
+  --s: 100px;  /* size  */
+  --m: 4px;    /* space */
+  --r: calc(var(--s)*3*1.1547/2 + 4*var(--m)  - 2px);
+}
+
+.hex-grid-container {
+  font-size: 0; /*disable white space between inline block element */
+}
+
+.hex-grid-container div {
+  width: var(--s);
+  margin: var(--m);
+  height: calc(var(--s)*1.1547); /*  = 1/cos(30)  */
+  display: inline-block;
+  font-size:initial;
+  clip-path: polygon(0% 25%, 0% 75%, 50% 100%, 100% 75%, 100% 25%, 50% 0%);
+  background: red;
+  margin-bottom: calc(var(--m) - var(--s)*0.2885); /* = tan(30)/2 */
+}
+.hex-grid-container div:nth-child(odd) {
+  background:green;
+}
+.hex-grid-container::before {
+  content: "";
+  width: calc(var(--s)/2 + var(--m));
+  float: left;
+  height: 100%;
+  shape-outside: repeating-linear-gradient(     
+                   transparent 0 calc(var(--r) - 3px),      
+                   #fff        0 var(--r));
+}

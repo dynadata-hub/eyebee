@@ -1,0 +1,966 @@
+class WebRTCManager {
+
+    constructor(peerId,sessionId,rtcPeerConnFactory,rtcIceCandidateFactory,signalingManager,rtcPeerConfig,eventCallbacks){
+        this.peerId = peerId;
+        this.turn = false;
+        this.sessionId = sessionId;
+        this.sfu = false;
+        this.assignedSFU = null;
+        //this.isHost = isHost;
+        this.rtcPeerConfig = rtcPeerConfig;
+        this.rtcPeerConnFactory = rtcPeerConnFactory;
+        this.rtcIceCandidateFactory = rtcIceCandidateFactory;
+        this.localStreams = {};
+        this.signalingManager = signalingManager;
+        this.localMediaObjects = {};
+        this.remoteMediaObjects = {};
+        this.eventCallbacks = eventCallbacks;
+        this.webrtcConnectionTest = null;
+        this.remotePeers = {};
+        this.constraints = null;
+        this.assignedSFU = null;
+        this.listening = false;
+    }
+
+    setEventCallbacks(cbs){
+        this.eventCallbacks = cbs;
+    }
+
+    addLocalMedia(streamObj,label){
+        console.debug("(wrtcmanager) addLocalMedia! ",{media:streamObj});
+
+        this.localMediaObjects[streamObj.id] = {
+            stream:streamObj,
+            label: label
+        };
+
+        this.signalingManager.emit("peer_media_changed",{
+            sessionId: this.sessionId,
+            from:this.peerId,
+            type:"added",
+            label:label,
+            streamId:streamObj.id
+        });
+
+
+        this.addLocalMediaToPCs(streamObj);
+        return true;
+
+    }
+
+    addLocalStreamsToPC(localPeerId,assignedSFUId){
+        console.log("addLocalMediaToPC",{localPeerId:localPeerId,assignedSFUId:assignedSFUId});
+
+        let localStreams = Object.keys(this.localMediaObjects);
+
+        let allStreams = [];
+            
+        localStreams.forEach(s => {
+            //let stream = this.localMediaObjects[s];
+            allStreams.push(this.localMediaObjects[s].stream);
+            
+        });
+
+        console.log("addLocalMediaToPC: los streams locales que agrega",{allStreams:allStreams});
+
+        allStreams.forEach(async stream =>{
+
+            stream.getTracks().forEach( t => {
+                                
+                console.log("addLocalMediaToPC: lo que puedo sacar de currloc descr",{cld:this.remotePeers[assignedSFUId].peerConn.currentLocalDescription});
+
+                let transceivers = this.remotePeers[assignedSFUId].peerConn.getTransceivers();
+
+                let trackAlreadyAdded = transceivers.find(ts => {
+                    console.log("addLocalMediaToPC: sender to analyze",{
+                        peerId:assignedSFUId,
+                        ts:ts,
+                        transceiversAlready:transceivers
+                    })
+                    return ts.sender && ts.sender.track && ts.sender.track.id === t.id;
+                });
+
+                console.log("addLocalMediaToPC: searching if this track was already added",{
+                    peerId:assignedSFUId,
+                    remotePeer:this.remotePeers[assignedSFUId],
+                    remPeerConn:this.remotePeers[assignedSFUId].peerConn,
+                    track:t,
+                    transceivers:transceivers,
+                    trackAlreadyAdded:trackAlreadyAdded
+                });
+
+                if(!trackAlreadyAdded){
+                    console.log("addLocalMediaToPC: track not added yet...continue");
+                    let sender = this.remotePeers[assignedSFUId].peerConn.addTrack(t, stream);
+
+                    // if(t.kind === "video" && this.constraints && this.constraints.preferredVideoCodecs){
+                    //     let allTransceivers = this.remotePeers[assignedSFUId].peerConn.getTransceivers();
+                    //     let transceiver = allTransceivers.find(ts => {
+                    //         return ts.sender && ts.sender.track === t;
+                    //     });
+                    //     let filteredVideoCodecs = this.filterVideoCodecs(this.constraints.preferredVideoCodecs);
+                        
+                    //     transceiver.setCodecPreferences(filteredVideoCodecs);
+                    // }
+                
+
+                    try{
+
+                        if(!this.remotePeers[assignedSFUId].mediaTrackSenders){
+                            this.remotePeers[assignedSFUId].mediaTrackSenders = []
+                        }
+            
+                        this.remotePeers[assignedSFUId].mediaTrackSenders.push(sender);
+        
+                        console.log("addLocalMediaToPC:estado de remotePeers luego de agregar track",{rp:this.remotePeers});
+                    }catch(err){
+                        console.error(err);
+                    }
+                }
+
+            });
+
+
+        });
+
+        console.log("addLocalMediaToPC: estado posterior a agregar los streams locales al peerconn",{rp:this.remotePeers});
+
+        return true;
+    }
+
+    addLocalMediaToPCs(streamObj){
+        console.log("estado previo a agregar los streams locales al peerconn",{rp:this.remotePeers});
+        let connectedPeers = Object.keys(this.remotePeers);
+        console.log("los connected peers",{peers:connectedPeers});
+        console.log(streamObj);
+
+        connectedPeers.forEach(async pId =>{
+            
+            console.log("lo que puedo sacar de currloc descr",{cld:this.remotePeers[pId].peerConn.currentLocalDescription});
+
+            streamObj.getTracks().forEach( t => {
+                let sender = this.remotePeers[pId].peerConn.addTrack(t,streamObj);
+                if(!this.remotePeers[pId].mediaTrackSenders){
+                    this.remotePeers[pId].mediaTrackSenders = []
+                }               
+
+                this.remotePeers[pId].mediaTrackSenders.push(sender);
+            });
+
+            console.log("lo que finaliza peer answer con senders",{ps:this.remotePeers[pId].peerConn.getSenders()});
+
+        });
+
+        console.log("estado posterior a agregar los streams locales al peerconn",{rp:this.remotePeers});
+
+        return true;
+    }
+
+    removeLocalMedia(streamObj,streamType){
+        console.log("el estado de las variables antes de sacar el local media",{rp:this.remotePeers,lmo:this.localMediaObjects});
+        let connectedPeers = Object.keys(this.remotePeers);
+        console.log("los connected peers",{peers:connectedPeers});
+        console.log(streamObj);
+        
+
+        connectedPeers.forEach(pId =>{
+            
+            let mediaSenders = this.remotePeers[pId].mediaTrackSenders;
+                if(mediaSenders && mediaSenders.length > 0){
+              
+                    console.log("mediaTrackSenders tiene elementos! esta transmitiendo al peer",{mediaSenders:mediaSenders});
+                    streamObj.getTracks().forEach(t => {
+                        let foundId = -1;
+                        for(let i=0; i<mediaSenders.length; i++ ){
+                            console.log("el media sender que va a evaluar ",{ms: mediaSenders[i],t:t});
+                            if(t.id === mediaSenders[i].track.id){
+                                console.log("el track que va a remover ",{track:mediaSenders[i].track});
+                                this.remotePeers[pId].peerConn.removeTrack(mediaSenders[i]);
+                                foundId = i;
+                                break;
+                            }
+                        }
+
+                        if(foundId >= 0){
+                            mediaSenders.splice(foundId,1);
+                        }
+                       
+                    });
+
+                    console.log("estado final de mediatracksenders",{ms:this.remotePeers[pId].mediaTrackSenders});
+                    
+                }
+
+        });
+
+       
+        if(this.localMediaObjects[streamObj.id]){
+
+            this.signalingManager.emit("peer_media_changed",{
+                sessionId: this.sessionId,
+                from:this.peerId,
+                type:"removed",
+                label:this.localMediaObjects[streamObj.id].label,
+                streamId:streamObj.id
+            });
+
+            delete this.localMediaObjects[streamObj.id];
+            if(this.eventCallbacks["onLocalMediaRemoved"]){
+                this.eventCallbacks["onLocalMediaRemoved"](streamObj.id);
+            }
+        }
+
+        console.log("el estado de las variables DESPUES de sacar el local media",{rp:this.remotePeers,lmo:this.localMediaObjects[streamObj.id]});
+
+    }
+
+    async makeOffer(remotePeerId){
+        try {
+            this.remotePeers[remotePeerId].makingOffer = true;
+            await this.remotePeers[remotePeerId].peerConn.setLocalDescription();
+            this.remotePeers[remotePeerId].polite = true;
+            let localSDP = this.remotePeers[remotePeerId].peerConn.localDescription;
+
+            //Proposal: limit bandwidth
+            // if(this.constraints && this.constraints.bandwidthKbps){
+                
+            //     localSDP = this.adjustBandwidth(this.remotePeers[remotePeerId].peerConn,this.constraints.bandwidthKbps);
+            // }
+            
+            
+            this.signalingManager.emit("peer_webrtc_message",{
+                from:this.peerId,
+                isSFU:this.sfu,
+                target: remotePeerId,
+                type:"description",
+                data:{
+                    description:this.remotePeers[remotePeerId].peerConn.localDescription
+                }
+            });
+
+        } catch(err) {
+          console.error(err);
+        } finally {
+            this.remotePeers[remotePeerId].makingOffer = false;
+        }
+        return this.remotePeers[remotePeerId];
+    }
+
+    addStreamsToPC(streams,peerId){
+        console.log("addStreamsToPC -- adding streams to peer connection",{peerId:peerId,streams:streams});
+        streams.forEach(stream => {
+           
+            stream.getTracks().forEach( t => {
+
+                if(this.remotePeers[peerId] && this.remotePeers[peerId].peerConn){  
+                    console.log("addStreamsToPC -- we have a peer connection with this peer...",{peerId:peerId,peerConn:this.remotePeers[peerId].peerConn});
+                    let transceivers = this.remotePeers[peerId].peerConn.getTransceivers();
+
+                    let trackAlreadyAdded = transceivers.find(ts => {
+                        console.log("addStreamsToPC -- sender to analyze",{
+                            peerId:peerId,
+                            ts:ts,
+                            transceiversAlready:transceivers
+                        })
+                        return ts.sender && ts.sender.track && ts.sender.track.id === t.id;
+                    });
+    
+                    console.log("addStreamsToPC -- searching if this track was already added",{
+                        peerId:peerId,
+                        remotePeer:this.remotePeers[peerId],
+                        remPeerConn:this.remotePeers[peerId].peerConn,
+                        track:t,
+                        transceivers:transceivers,
+                        trackAlreadyAdded:trackAlreadyAdded
+                    });
+    
+                    if(!trackAlreadyAdded){
+                        console.log("addStreamsToPC -- track not added yet...continue");
+                        let sender = this.remotePeers[peerId].peerConn.addTrack(t, stream);
+    
+                        // if(t.kind === "video" && this.constraints && this.constraints.preferredVideoCodecs){
+                        //     let allTransceivers = this.remotePeers[peerId].peerConn.getTransceivers();
+                        //     let transceiver = allTransceivers.find(ts => {
+                        //         return ts.sender && ts.sender.track === t;
+                        //     });
+                        //     let filteredVideoCodecs = this.filterVideoCodecs(this.constraints.preferredVideoCodecs);
+                            
+                        //     transceiver.setCodecPreferences(filteredVideoCodecs);
+                        // }
+                       
+                        //sender.direction = "sendonly";
+                        try{
+        
+                            if(!this.remotePeers[peerId].mediaTrackSenders){
+                                this.remotePeers[peerId].mediaTrackSenders = []
+                            }
+                
+                            this.remotePeers[peerId].mediaTrackSenders.push(sender);
+            
+                            console.log("addStreamsToPC -- estado de remotePeers luego de agregar track",{rp:this.remotePeers});
+                        }catch(err){
+                            console.error(err);
+                        }
+                    }
+                }else{
+                    console.warn("addStreamsToPC -- couldn't add stream to pc. No Pc found to this peer",{peerId: peerId,remotePeer:this.remotePeers[peerId]});
+                }
+
+            });
+        });
+
+        return true;
+    }
+
+
+
+
+    addTrackToPC(track,stream,peerId){
+        console.log("adding track to peer connection",{track:track,peerId:peerId,
+            stream:stream});
+
+                let transceivers = this.remotePeers[peerId].peerConn.getTransceivers();
+
+                let trackAlreadyAdded = transceivers.find(ts => {
+                    console.log("sender to analyze",{
+                        peerId:peerId,
+                        ts:ts,
+                        transceiversAlready:transceivers
+                    })
+                    return ts.sender && ts.sender.track && ts.sender.track.id === track.id;
+                });
+
+                console.log("searching if this track was already added",{
+                    peerId:peerId,
+                    remotePeer:this.remotePeers[peerId],
+                    remPeerConn:this.remotePeers[peerId].peerConn,
+                    track:track,
+                    transceivers:transceivers,
+                    trackAlreadyAdded:trackAlreadyAdded
+                });
+
+                if(!trackAlreadyAdded){
+                    console.log("track not added yet...continue");
+                    let sender = this.remotePeers[peerId].peerConn.addTrack(track, stream);
+
+                    // if(track.kind === "video" && this.constraints && this.constraints.preferredVideoCodecs){
+                    //     let allTransceivers = this.remotePeers[peerId].peerConn.getTransceivers();
+                    //     let transceiver = allTransceivers.find(ts => {
+                    //         return ts.sender && ts.sender.track && ts.sender.track.id === track.id;
+                    //     });
+                    //     let filteredVideoCodecs = this.filterVideoCodecs(this.constraints.preferredVideoCodecs);
+                        
+                    //     transceiver.setCodecPreferences(filteredVideoCodecs);
+                    // }
+                   
+    
+                    try{
+    
+                        if(!this.remotePeers[peerId].mediaTrackSenders){
+                            this.remotePeers[peerId].mediaTrackSenders = []
+                        }
+            
+                        this.remotePeers[peerId].mediaTrackSenders.push(sender);
+        
+                        console.log("estado de remotePeers luego de agregar track",{rp:this.remotePeers});
+                    }catch(err){
+                        console.error(err);
+                    }
+                }
+
+        return true;
+    }
+
+    getAllRemoteStreams(excludedPeerId){
+        let allStreams = [];
+
+        Object.keys(this.remotePeers).filter( p => {
+            if(p !== excludedPeerId){
+                return true;
+            }
+        }).forEach(p => {
+
+            if(this.remotePeers[p].remoteStreams){
+                allStreams = allStreams.concat(this.remotePeers[p].remoteStreams);
+            }
+
+        });
+
+        return allStreams;
+    }
+
+    addToPeerRemoteStreams(stream,peerId){
+        if(!this.remotePeers[peerId].remoteStreams){
+            this.remotePeers[peerId].remoteStreams = [];
+        }
+
+        let strFound = this.remotePeers[peerId].remoteStreams.filter(s => {
+            if(s.id === stream.id){
+                return true;
+            }
+        });
+
+        console.log("addToPeerRemoteStreams -- el valor de strFound",{peerId: peerId,strFound:strFound});
+
+        if(!strFound[0]){
+            console.log("stream not found... add it to peer's remoteStreams",{peerId:peerId,stream:stream,peerRS:this.remotePeers[peerId].remoteStreams});
+            this.remotePeers[peerId].remoteStreams.push(stream);
+
+            return true;
+
+        }else{
+            console.log("stream already added to peer's remoteStreams",{peerId:peerId,stream:stream,peerRS:this.remotePeers[peerId].remoteStreams});
+            return false;
+        }
+
+        
+
+    }
+
+    createPeerConnection(peerId,includeLocalMedia){
+
+        console.log("Creating peer connection with "+peerId+" "+includeLocalMedia);
+        
+
+        if(!this.remotePeers[peerId]){
+            this.remotePeers[peerId] = {};
+        }
+        this.remotePeers[peerId].peerConn = new RTCPeerConnection(this.rtcPeerConfig);
+
+        let allStreams = [];
+
+        if(includeLocalMedia){
+            console.log("This peer is our assignedSFU...add localmedia to PC",{peerId:peerId});
+            let localStreams = Object.keys(this.localMediaObjects);
+            
+            localStreams.forEach(s => {
+                //let stream = this.localMediaObjects[s];
+                allStreams.push(this.localMediaObjects[s].stream);
+                
+    
+            });
+        }
+
+        if(this.remotePeers[peerId].assignedSFU === this.peerId){
+
+            let allRemoteStreams = allStreams.concat(this.getAllRemoteStreams(peerId));
+            console.log("allRemoteStreams",{remotePeers: this.remotePeers,peerId: peerId,localPeerId:this.peerId,allRemoteStreams:allRemoteStreams});
+            allStreams = allStreams.concat(allRemoteStreams);
+        }
+
+        console.log("lo que termina siendo allsTreams",{as:allStreams});
+        this.addStreamsToPC(allStreams,peerId);
+
+        this.remotePeers[peerId].peerConn.onicecandidate = ({candidate}) => {
+
+            if (!candidate) {
+                console.log('Got final candidate!');
+                return;
+            }
+
+            this.signalingManager.emit("peer_webrtc_message",{
+                from:this.peerId,
+                isSFU:this.sfu,
+                target: peerId,
+                type:"ice_candidate",
+                data:{
+                    candidate:candidate
+                }
+            });
+        };
+
+        this.remotePeers[peerId].peerConn.ontrack = ({track, streams}) => {
+
+            console.log("ontrack -- aparece un track nuevo en la pc",{peerId:peerId,track:track,streams:streams});
+
+            
+          
+
+
+
+            track.onunmute = () => {
+                console.log("ontrack -- comenzando...  ",{peerId:peerId, miSFU: this.assignedSFU ? this.assignedSFU.id : null, rp:this.remotePeers,streams:streams});
+
+                let streamOriginPeerId = Object.keys(this.remotePeers).filter(p => {
+                    if(this.remotePeers[p].localStreams[streams[0].id]){
+                        return true;
+                    }
+                })[0];
+                console.log("ontrack -- peer origen de este stream",{streamOriginPeerId:streamOriginPeerId});
+
+                let added = this.addToPeerRemoteStreams(streams[0],streamOriginPeerId);  
+
+                if(added){
+                    console.log("createPeerConnection -- ontrack: new stream added",{streamOriginPeerId:streamOriginPeerId,t:track,ss:streams,peerLocalStreams: this.remotePeers[peerId].localStreams});
+                    this.eventCallbacks["onRemoteTrack"](streamOriginPeerId,track,streams[0]);
+                }
+
+                if(added && this.sfu && this.assignedSFU){
+
+                    
+                    let sfuId = this.assignedSFU.id ? this.assignedSFU.id : this.assignedSFU;
+                    console.log("ontrack -- el stream fue agregado con exito",{peerId:peerId,sfuId:sfuId,assignedSFU:this.assignedSFU,stream:streams[0],peerLocalStreams:this.remotePeers[peerId].localStreams});
+                    if(this.remotePeers[peerId].assignedSFU === this.peerId){
+                        console.log("ontrack -- el stream pertenece al peer origen, significa que soy la sfu de este peerId ",{peerId:peerId, originPeer:streamOriginPeerId});
+                        
+                        
+                        // this.signalingManager.emit("peer_remote_stream_added",{
+                        //     peerId:peerId,
+                        //     streamId: streams[0].id
+                        // })
+                    }
+
+                    console.log("ontrack -- emitiendo evento ws peer_stream_loaded",{originPeerId:streamOriginPeerId,peerId:peerId,sfuId:sfuId,assignedSFU:this.assignedSFU,stream:streams[0],peerLocalStreams:this.remotePeers[peerId].localStreams});
+                    this.signalingManager.emit("peer_stream_loaded",{
+                        sessionId: this.sessionId,
+                        originPeerId:streamOriginPeerId,
+                        peerId:this.peerId,
+                        streamId: streams[0].id
+                    });
+
+                    //peerId !== sfuId && 
+                    console.log("ontrack -- la comparación para ver si agregar el stream ",{peerId: peerId,
+                        peerIdassignedSFU:this.remotePeers[peerId].assignedSFU,
+                        mySFUId:sfuId,
+                        thisPeer: this.peerId, currentStreamId: streams[0].id,
+                        isSameAsRemotePeerLocalStream: this.remotePeers[sfuId].localStreams[streams[0].id]
+                    });
+
+                    
+                    if(this.remotePeers[peerId].assignedSFU === this.peerId && !this.remotePeers[sfuId].localStreams[streams[0].id] ){
+                        
+                        //this.addPeerStreamToPC(sfuId,peerId,this.remotePeers[peerId].localStreams);
+                    
+                        //this.addPeerStreamToPC(sfuId,peerId,this.remotePeers[streamOriginPeerId].localStreams);
+                        //this.addStreamsToPC(streams,sfuId);
+                        console.log("ontrack -- executing addStreamsToPC",{peerId:peerId,sfuId:sfuId,rPeers:this.remotePeers,originPeer:streamOriginPeerId});
+                        this.addStreamsToPC(streams,sfuId);
+                        
+                        // let sfuRemoteStreams = this.remotePeers[sfuId].remoteStreams;
+                        // if(sfuRemoteStreams){
+                        //     let remStreamFound = sfuRemoteStreams.filter(s => {
+                        //         if(s.id === streams[0].id ){
+                        //             return true;
+                        //         }
+                        //     })[0];
+                        //     console.log("onunmute -- searching sfu remote streams",{peerId:peerId,sfuId:sfuId,sfuRemoteStreams:sfuRemoteStreams,remStreamFound:remStreamFound,rPeers:this.remotePeers,originPeer:streamOriginPeerId});
+
+                        //     if(!remStreamFound){
+                        //         console.log("onunmute -- executing addStreamsToPC",{peerId:peerId,sfuId:sfuId,rPeers:this.remotePeers,originPeer:streamOriginPeerId});
+
+                        //         this.addStreamsToPC(streams,sfuId);
+                        //     }
+                        // }else{
+                        //     console.warn("onunmute -- no remote streams found on our sfu!",{peerId:peerId,sfuId:sfuId,sfuRemoteStreams:sfuRemoteStreams,rPeers:this.remotePeers,originPeer:streamOriginPeerId});
+                        // }
+                        
+
+
+                    }
+                    
+                    
+                    // if(peerId !== sfuId && peerId === streamOriginPeerId){
+                    //     console.log("onunmute -- Este stream corresponde al stream local del peer actual, Soy la SFU de este peer",{peerId:peerId,myPeerId:this.peerId});
+                        
+                    //     this.addPeerStreamToPC(sfuId,peerId,this.remotePeers[peerId].localStreams);
+
+                    // }else if( peerId === sfuId && peerId !== streamOriginPeerId ){
+                    //     this.addPeerStreamToPC(sfuId,streamOriginPeerId,this.remotePeers[streamOriginPeerId].localStreams);
+                    // }
+                }
+            };
+
+            streams[0].onremovetrack = () => {
+                console.log("se removió este stream!",{stream:streams[0]});
+                this.eventCallbacks["onRemoteStreamRemoved"](peerId,streams[0]);
+
+            }
+
+        };
+
+        this.remotePeers[peerId].peerConn.oniceconnectionstatechange = () => {
+            if (this.remotePeers[peerId].peerConn.iceConnectionState === "failed") {
+                console.log("ICE FAIL",{peer:this.remotePeers[peerId]});
+                this.remotePeers[peerId].peerConn.restartIce();
+            }
+        };
+
+        this.remotePeers[peerId].peerConn.onnegotiationneeded = async () => {
+           
+            await this.makeOffer(peerId);
+        };
+
+        this.remotePeers[peerId].peerConn.onconnectionstatechanged = async () => {
+            console.log("connection state changed!",{state: this.remotePeers[peerId].peerConn.connectionState})
+           
+           
+        };
+
+        return this.remotePeers[peerId].peerConn;
+
+    }
+
+    filterVideoCodecs(preferredCodecs){
+        const {codecs} = RTCRtpSender.getCapabilities('video');
+        
+        let finalCodecList = [];
+        codecs.forEach(codec => {
+
+            if (['video/red', 'video/ulpfec', 'video/rtx'].includes(codec.mimeType)) {
+                return;
+            }
+
+            if(preferredCodecs.includes(codec.mimeType)){    
+                finalCodecList.push(codec);
+            }
+
+        });
+        let aux = [...finalCodecList];
+        finalCodecList=[];
+        preferredCodecs.forEach(e => {
+            console.log("el codec a analizar ",{e:e});
+            
+          
+            let filteredList = aux.filter(c => {
+               
+                return c.mimeType === e;
+            });
+            finalCodecList = finalCodecList.concat(filteredList);
+
+        });
+
+        return finalCodecList;
+    }
+
+    getPCToPeer(peerId){
+        return this.remotePeers[peerId] ? this.remotePeers[peerId].peerConn : null;
+    }
+
+    addPeerStreamToPC(peerId,targetPeerId,targetLocalStreams){
+        console.log("addPeerStreamToPC -- entrando a la función",{peerId:peerId,target:targetPeerId,targetLocalStreams:targetLocalStreams});
+
+       
+        if(this.remotePeers[peerId] && this.remotePeers[peerId].peerConn){
+            //let targetLocalStreams = this.remotePeers[targetPeerId].localStreams;
+            let targetRemoteStreams = this.remotePeers[targetPeerId].remoteStreams;
+            let allStreams = [];
+            console.log("addPeerStreamToPC -- streams locales y remotos de target",{
+                rPeers:this.remotePeers,
+                peerId:peerId,target:targetPeerId,targetRemoteStreams: targetRemoteStreams,targetLocalStreams:targetLocalStreams});
+
+            Object.keys(targetLocalStreams).forEach(s => {
+                console.log("addPeerStreamToPC -- buscando stream local en remote streams",{
+                    s:s,
+                    peerId:peerId,target:targetPeerId,targetRemoteStreams: targetRemoteStreams,targetLocalStreams:targetLocalStreams});
+                let str = targetRemoteStreams.filter(r => {
+                    if(r.id === s){
+                        return true;
+                    }
+                });
+
+                console.log("addPeerStreamToPC -- resultado del filtrado",{
+                    s:s,
+                    str:str,
+                    peerId:peerId,target:targetPeerId,targetRemoteStreams: targetRemoteStreams,targetLocalStreams:targetLocalStreams});
+
+                allStreams = allStreams.concat(str);
+
+            });
+
+            console.log("addPeerStreamToPC -- todos los streams que va a agregar a la peerConn",{allStreams:allStreams,
+                peerId:peerId,target:targetPeerId,targetRemoteStreams: targetRemoteStreams,targetLocalStreams:targetLocalStreams});
+            this.addStreamsToPC(allStreams,peerId);
+
+        }else{
+            console.warn("addPeerStreamToPC -- no se encontró el peer id en remotePeers",{
+                peerId:peerId,target:targetPeerId, rPeers:this.remotePeers});
+        }
+    }
+
+    listenToWebRTCMessages(){
+        console.debug("escuchando webrtc_messages que lleguen");
+        this.listening = true;
+        this.signalingManager.on("peer_webrtc_message",async message => {
+
+            let connectionData = null;
+
+            if(this.remotePeers[message.from]){
+                
+                if(!this.remotePeers[message.from].peerConn){
+                    let sendLocalMedia = false;
+                    if(!this.assignedSFU && message.isSFU ){
+                        sendLocalMedia = true;
+                        this.assignedSFU = message.from;
+                        console.log("listenToWebRTCMessages -- sending set_target_sfu 1");
+                        this.signalingManager.emit("set_target_sfu",{
+                            userId:this.peerId,
+                            selectedSFU: message.from
+                        });
+                    }
+
+                    this.createPeerConnection(message.from,sendLocalMedia);
+                }
+
+                connectionData  = this.remotePeers[message.from];
+            }else{
+                this.remotePeers[message.from] = {};
+                let sendLocalMedia = false;
+                if(!this.assignedSFU  && message.isSFU ){
+                    sendLocalMedia = true;
+                    this.assignedSFU = message.from;
+                    console.log("listenToWebRTCMessages -- sending set_target_sfu 2");
+                    this.signalingManager.emit("set_target_sfu",{
+                        userId:this.peerId,
+                        selectedSFU: message.from
+                    });
+                }
+
+                this.createPeerConnection(message.from,sendLocalMedia);
+                connectionData = this.remotePeers[message.from];
+
+            }
+
+            this.remotePeers[message.from].sfu = message.isSFU;
+
+            
+
+            if(message.type === "description"){
+
+                const offerCollision = (message.data.description.type == "offer") &&
+                (connectionData.makingOffer || connectionData.peerConn.signalingState != "stable");
+
+
+                console.debug("description state",{peerId:message.from,isSFU:message.isSFU,pol: connectionData.polite, ofCol: offerCollision,dtype: message.data.description.type,mo:connectionData.makingOffer,ss:connectionData.peerConn.signalingState })
+    
+                connectionData.ignoreOffer = !connectionData.polite && offerCollision;
+    
+                if (connectionData.ignoreOffer) {
+                    console.debug("offer ignored!");
+                    return;
+                }
+
+                await connectionData.peerConn.setRemoteDescription(message.data.description);
+
+                if (message.data.description.type == "offer") {
+                    console.debug("el description que mandaron es un offer...preparando la respuesta");
+                    await connectionData.peerConn.setLocalDescription();
+
+                    let localSDP = connectionData.peerConn.localDescription;
+
+                    //Proposal: limit bandwidth
+                    // if(this.constraints && this.constraints.bandwidthKbps){
+                
+                    //     localSDP = this.adjustBandwidth(connectionData.peerConn,this.constraints.bandwidthKbps);
+                    // }
+
+                    console.debug("peerConn",{ld:localSDP});
+
+                    this.signalingManager.emit("peer_webrtc_message",{
+                        from:this.peerId,
+                        isSFU:this.sfu,
+                        target: message.from,
+                        type:"description",
+                        data:{
+                            description:localSDP
+                        }
+                    });
+                }
+
+            }else if(message.type === "ice_candidate"){
+                try {
+                    await this.remotePeers[message.from].peerConn.addIceCandidate(new RTCIceCandidate(message.data.candidate));
+                    } catch(err) {
+                        console.error(err);
+                    if (!connectionData.ignoreOffer) {
+                        
+                      throw err;
+                    }
+                }
+                
+            }
+            // else if(message.type === "send_peer_stream"){
+            //     console.log("recibiendo mensaje ws: send_peer_stream",{peerId: message.peerId,target: message.target})
+            //     this.addPeerStreamToPC(message.peerId,message.target,message.targetLocalStreams);
+            // }
+
+        });
+
+        this.signalingManager.on("send_peer_stream",async message => {
+            console.log("recibiendo mensaje ws: send_peer_stream",{peerId: message.peerId,target: message.target})
+            this.addPeerStreamToPC(message.peerId,message.target,message.targetLocalStreams);
+        });
+    }
+
+    timeout(millis) {
+        let prom = new Promise((resolve,reject) => {
+            setTimeout(() => {
+                resolve();
+            },millis || 1000);
+        });
+        return prom;
+    }
+
+    updatePeerLocalStreams(peerId,localStreams){
+        console.log("webrtcManager -- updating localStreams reference of peer "+peerId,{ls:localStreams})
+        if(!this.remotePeers[peerId]){
+            this.remotePeers[peerId] = {};
+        }
+
+        this.remotePeers[peerId].localStreams = localStreams;
+    }
+
+    updatePeerAssignedSFU(peerId,assignedSFU){
+        console.log("webrtcManager -- updating peer assigned SFU "+peerId,{assignedSFU:assignedSFU})
+        // if(!this.remotePeers[peerId]){
+        //     this.remotePeers[peerId] = {};
+        // }
+        if(this.remotePeers[peerId]){
+            this.remotePeers[peerId].assignedSFU = assignedSFU;
+        }
+        
+    }
+
+    async startWebRTCConnections(assignedSFUPeer,restOfSFUs,connConstraints){
+
+        if(assignedSFUPeer && restOfSFUs){
+
+            this.assignedSFU = assignedSFUPeer;
+
+            this.createPeerConnection(assignedSFUPeer.id,  true);
+
+            // for(let i=0; i< restOfSFUs.length; i++){
+            //     console.debug("peer to send offer ",{peer:restOfSFUs[i],assignedSFUPeer:assignedSFUPeer});
+            //     //let includeLocalMedia = assignedSFUPeer.id === restOfSFUs[i].id;
+            //     this.createPeerConnection(restOfSFUs[i].id,  false);
+
+            //     let result = await this.makeOffer(restOfSFUs[i].id);
+
+            //     //await this.timeout(1000);
+            // }
+
+
+            // this.createPeerConnection(sfuPeer.id);
+
+            // let result = await this.makeOffer(sfuPeer.id);
+        }
+
+        // this.createPeerConnection(assignedSFUPeer.id,true);
+
+        //     let result = await this.makeOffer(assignedSFUPeer.id);
+
+
+
+        
+        // for(let i=0; i< remotePeers.length; i++){
+        //     console.debug("peer to send offer ",{peer:remotePeers[i]});
+
+        //     this.createPeerConnection(remotePeers[i].id);
+
+        //     let result = await this.makeOffer(remotePeers[i].id);
+
+        //     await this.timeout(1500);
+        // }
+      
+        return true;
+    }
+
+
+    requestPeersStreams(peers,owner,presenter){
+        console.log("requestPeersStreams -- entering",{peers:peers});
+        //let sfuSFU = peers[this.assignedSFU.id].assignedSFU;
+
+        // let otherPeersIds = Object.keys(peers).filter(p => {
+            
+        //     if(p !== this.peerId && peers[p].assignedSFU !== this.peerId) return true;
+        // });
+
+        // if(!presenter){
+        //     otherPeersIds = otherPeersIds.filter(p => {
+        //         return peers[p].presenter;
+        //     })
+        // }
+         
+
+        // console.log("requestPeersStreams -- filtering list to get other peers",{otherPeersIds:otherPeersIds});
+
+        // if(otherPeersIds && otherPeersIds.length > 0){
+
+        //     otherPeersIds.forEach(p => {
+        //         console.log("requestPeersStreams -- sending ws event peer_streams_requested ",{peerId:this.peerId,target:p});
+        //         if(!this.remotePeers[p]){
+        //             this.remotePeers[p] = {};
+        //         }
+
+        //         this.remotePeers[p].localStreams = peers[p].localStreams;
+
+        //         this.signalingManager.emit("peer_streams_requested",{
+        //             peerId: this.peerId,
+        //             sessionId: this.sessionId,
+        //             type:"send_peer_stream",
+        //             target: p
+        //         });
+
+        //     });
+            
+        // }else{
+        //     console.log("No other peers to retrieve",{peers:peers,otherPeersIds:otherPeersIds})
+        // }
+
+
+        //this.remotePeers[this.assignedSFU.id].localStreams = peers[this.assignedSFU.id].localStreams;
+
+        this.signalingManager.emit("peer_streams_requested",{
+            peerId: this.peerId,
+            sessionId: this.sessionId,
+            type:"send_peer_stream",
+            target: this.assignedSFU.id
+        });
+
+
+    }
+
+
+    closePeerConnection(peer){
+        console.debug("closing peer connection",{peer:peer,remotePeers:this.remotePeers});
+
+        let remotePeer = this.remotePeers[peer.peerId];
+
+        if(remotePeer && remotePeer.peerConn){
+
+            remotePeer.peerConn.close();
+            remotePeer.peerConn = null;
+            this.remotePeers[peer.peerId] = null;
+
+            delete this.remotePeers[peer.peerId];
+
+        }else{
+            console.warn("closePeerConnection -- Did not close any PC because it does not have a PC associated",{peer:remotePeer});
+        }
+
+        console.debug("closePeerConnection -- el estado final de remotepeers",{rp:this.remotePeers});
+
+        
+
+        return peer.userId;
+
+    }
+
+    async testNAT(){
+        try{
+            await this.webrtcConnectionTest.checkTurnOrStun({"url": "stun:stun.l.google.com:19302"});
+            this.turn = false;
+        }catch(err){
+            console.error(err);
+            this.turn = true;
+        }
+
+        return {
+            turn: this.turn
+        }
+        
+    }
+
+
+}
+
+export default WebRTCManager;

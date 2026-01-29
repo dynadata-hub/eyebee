@@ -1,0 +1,113 @@
+version: '2'
+services:
+
+  proxy:
+    image: jwilder/nginx-proxy:0.8.0
+    container_name: "proxy"
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - conf:/etc/nginx/conf.d
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - dhparam:/etc/nginx/dhparam
+      - certs:/etc/nginx/certs:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - eyebee
+    logging:
+      options:
+        max-size: "50m"
+  
+  letsencrypt-nginx-proxy-companion:
+    container_name: "lnpc"
+    image: jrcs/letsencrypt-nginx-proxy-companion:2.0
+    networks:
+      - eyebee
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - certs:/etc/nginx/certs:rw
+      - acme:/etc/acme.sh
+    volumes_from:
+      - "proxy"
+    logging:
+      options:
+        max-size: "50m"
+
+  test_app:
+    image: nginx:1.19.8-alpine
+    container_name: "test_app"
+    restart: always
+    volumes:
+      - /root/eyebee-test-webapp/test_app:/app
+      - /root/eyebee-test-webapp/test_app_default.conf:/etc/nginx/conf.d/default.conf
+    expose:
+      - "80"
+    environment:
+      - VIRTUAL_HOST=livelatency.com
+    networks:
+      - eyebee
+    logging:
+      options:
+        max-size: "50m"
+
+#quiza un bloque de auth
+
+  webrtc_sessions:
+    image: node:14.16.0-alpine
+    container_name: "webrtc_sessions"
+    restart: always
+    expose:
+      - "5000"
+    logging:
+      options:
+        max-size: "50m"
+    working_dir: /src
+    volumes:
+      - /root/webrtc-sessions:/src
+    environment:
+      - PORT=5000
+    logging:
+      options:
+        max-size: "50m"
+    networks:
+      - eyebee
+
+  #zookeeper + kafka (for dev purpose)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - eyebee
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - eyebee
+  #----
+
+volumes:
+  conf:
+  vhost:
+  html:
+  dhparam:
+  certs:
+  acme:
+
+networks:
+  eyebee:

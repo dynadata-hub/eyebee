@@ -1,0 +1,23 @@
+{
+  "name": "speed_test_server",
+  "version": "0.1.0",
+  "description": "NodeJS server for bandwidth testing",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@bitbucket.org/immersiveeyebee/speed_test_server.git"
+  },
+  "author": "Villasanti Francisco",
+  "license": "UNLICENSED",
+  "homepage": "https://bitbucket.org/immersiveeyebee/speed_test_server#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "express-fileupload": "^1.2.1",
+    "morgan": "^1.10.0"
+  }
+}
