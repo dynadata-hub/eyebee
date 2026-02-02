@@ -13,6 +13,7 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+.env.production
 
 # Secrets - CRITICAL: Do not commit
 secrets/
@@ -41,6 +42,8 @@ Thumbs.db
 
 # Docker
 *.tar
+docker-compose.yml
+nginx/
 
 # Temp files
 tmp/
