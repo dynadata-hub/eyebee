@@ -259,7 +259,7 @@ const Login = props => {
     const login = () => {
         //Todo Login
         const payload = { name: userName, password: password }
-        axios.post("https://livelatency.com/api/v1/user/login", payload).then(result => {
+        axios.post("/api/v1/user/login", payload).then(result => {
             console.log(result);
             if (result.status === 200) {
                 localStorage.setItem("auth", true);

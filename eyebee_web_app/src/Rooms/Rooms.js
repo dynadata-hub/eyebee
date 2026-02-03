@@ -301,7 +301,7 @@ const Rooms = props => {
     }
 
     const deleteRoom = (room_id) => {
-        axios.delete("https://livelatency.com/api/v1/rooms/delete/" + room_id).then(result => {
+        axios.delete("/api/v1/rooms/delete/" + room_id).then(result => {
             if (result.status === 200) {
                 let index = rooms.map(r => r.room_id).indexOf(room_id);
                 let newRooms = rooms.slice();
@@ -312,7 +312,7 @@ const Rooms = props => {
     }
 
     const loadRooms = () => {
-        axios.get("https://livelatency.com/api/v1/rooms/"+( location.state ? "filter/" + location.state.user.user_id:"")).then(result => {
+        axios.get("/api/v1/rooms/"+( location.state ? "filter/" + location.state.user.user_id:"")).then(result => {
             console.log(result);
             if (result.status === 200) {
                 let roomsFromServer = result.data.data.map(r => {
@@ -337,7 +337,7 @@ const Rooms = props => {
         let year = date.getFullYear();
 
         const payload = { active: true, date: new Date(), name: roomName, type: "Webinar", usuarios: roomMax, room_uuid: "params", user_id: location.state.user.user_id }
-        axios.post("https://livelatency.com/api/v1/rooms/", payload).then(result => {
+        axios.post("/api/v1/rooms/", payload).then(result => {
             console.log(result);
             if (result.status === 201) {
                 console.log("room created");

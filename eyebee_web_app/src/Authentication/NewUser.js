@@ -267,7 +267,7 @@ const NewUser = props => {
     const login = () => {
         //Todo Login
         const payload = { name: userName, password: password, active: true, create_date: new Date() }
-        axios.post("https://livelatency.com/api/v1/user/", payload).then(result => {
+        axios.post("/api/v1/user/", payload).then(result => {
             console.log(result);
             if (result.status === 201) {
                 alert("User created")
