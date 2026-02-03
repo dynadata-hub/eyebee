@@ -53,9 +53,9 @@ services:
       - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID:-eyebee-718a0}
       - FIREBASE_STORAGE_BUCKET=${FIREBASE_STORAGE_BUCKET:-eyebee-718a0.appspot.com}
       - LOG_LEVEL=info
-      - VIRTUAL_HOST=${API_DOMAIN:-api.live.eyebee.com}
+      - VIRTUAL_HOST=${DOMAIN:-live.eyebee.com}
       - VIRTUAL_PORT=5000
-      - LETSENCRYPT_HOST=${API_DOMAIN:-api.live.eyebee.com}
+      - LETSENCRYPT_HOST=${DOMAIN:-live.eyebee.com}
     command: sh -c "npm ci --only=production && node index.js"
     expose:
       - "5000"
@@ -81,9 +81,9 @@ services:
     environment:
       - PORT=5100
       - SERVICE_NAME=speed_test_server
-      - VIRTUAL_HOST=${SPEEDTEST_DOMAIN:-speedtest.live.eyebee.com}
+      - VIRTUAL_HOST=${DOMAIN:-live.eyebee.com}
       - VIRTUAL_PORT=5100
-      - LETSENCRYPT_HOST=${SPEEDTEST_DOMAIN:-speedtest.live.eyebee.com}
+      - LETSENCRYPT_HOST=${DOMAIN:-live.eyebee.com}
     command: sh -c "npm ci --only=production && node index.js"
     expose:
       - "5100"
