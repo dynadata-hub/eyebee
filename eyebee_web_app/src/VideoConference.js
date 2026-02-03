@@ -184,7 +184,7 @@ const VideoConference = props => {
 
         let sIOProv = new SocketIOProvider(socketIOClient);
         let endpoint = "http://192.168.0.200";
-        if (window.location.origin.indexOf("livelatency.com") !== -1) {
+        if (window.location.origin.indexOf("livelatency.com") !== -1 || window.location.origin.indexOf("eyebee.com") !== -1) {
             //endpoint = "http://livelatency.com:5000";
             endpoint = "/";
         }
