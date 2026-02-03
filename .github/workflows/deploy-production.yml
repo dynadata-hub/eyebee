@@ -173,7 +173,9 @@ jobs:
               cd ..
             fi
             
-            # Create nginx directories
+            # Create nginx directories with proper permissions
+            sudo mkdir -p nginx || true
+            sudo chown -R $USER:$USER nginx || true
             mkdir -p nginx/vhost.d nginx/html nginx/certs nginx/acme
             
             echo "Setup complete"
