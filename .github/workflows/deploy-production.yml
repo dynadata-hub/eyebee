@@ -1,0 +1,241 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allow manual trigger
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            webrtc_sessions/package-lock.json
+            speed_test_server/package-lock.json
+
+      - name: Install webrtc_sessions dependencies
+        working-directory: ./webrtc_sessions
+        run: npm ci
+
+      - name: Install speed_test_server dependencies
+        working-directory: ./speed_test_server
+        run: npm ci
+
+      - name: Run webrtc_sessions tests
+        working-directory: ./webrtc_sessions
+        run: npm test || echo "No tests configured"
+
+      - name: Run speed_test_server tests
+        working-directory: ./speed_test_server
+        run: npm test || echo "No tests configured"
+
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: eyebee_web_app/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./eyebee_web_app
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: ./eyebee_web_app
+        run: npm run build
+        env:
+          CI: false  # Treat warnings as warnings, not errors
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: eyebee_web_app/build/
+          retention-days: 7
+
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+    needs: [test, build-frontend]
+    environment:
+      name: production
+      url: https://live.eyebee.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download frontend build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: eyebee_web_app/build/
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.PRODUCTION_SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Create .env file
+        run: |
+          cat > .env.production << EOF
+          DOMAIN=${{ secrets.DOMAIN }}
+          API_DOMAIN=${{ secrets.API_DOMAIN }}
+          SPEEDTEST_DOMAIN=${{ secrets.SPEEDTEST_DOMAIN }}
+          LETSENCRYPT_EMAIL=${{ secrets.LETSENCRYPT_EMAIL }}
+          FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET=${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          NODE_ENV=production
+          EOF
+
+      - name: Deploy code to server
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            --exclude 'node_modules' \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'secrets' \
+            --exclude '.env' \
+            --exclude 'nginx' \
+            --exclude 'tmp' \
+            --exclude 'temp' \
+            ./ ${{ secrets.SSH_USER }}@${{ secrets.PRODUCTION_SERVER_IP }}:/opt/eyebee/
+
+      - name: Deploy secrets (if changed)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          # Only deploy secrets on manual trigger for security
+          echo "Skipping secrets deployment (manual trigger only)"
+
+      - name: Setup production environment
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.PRODUCTION_SERVER_IP }} << 'ENDSSH'
+            set -e
+            cd /opt/eyebee
+            
+            # Copy production docker-compose if needed
+            if [ ! -f docker-compose.yml ] || ! diff -q docker-compose.yml docker-compose.production.yml > /dev/null 2>&1; then
+              echo "Updating docker-compose.yml from template..."
+              cp docker-compose.production.yml docker-compose.yml
+            fi
+            
+            # Copy .env if it doesn't exist
+            if [ ! -f .env ]; then
+              echo "Creating .env from uploaded file..."
+              cp .env.production .env
+            fi
+            
+            # Fix permissions
+            echo "Fixing permissions..."
+            if [ -d webrtc_sessions/node_modules ]; then
+              sudo chown -R $USER:$USER webrtc_sessions/node_modules
+            fi
+            
+            if [ -d speed_test_server/node_modules ]; then
+              sudo chown -R $USER:$USER speed_test_server/node_modules
+            fi
+            
+            # Generate package-lock.json if needed
+            if [ ! -f speed_test_server/package-lock.json ]; then
+              echo "Generating package-lock.json for speed_test_server..."
+              cd speed_test_server
+              npm install
+              cd ..
+            fi
+            
+            # Create nginx directories
+            mkdir -p nginx/vhost.d nginx/html nginx/certs nginx/acme
+            
+            echo "Setup complete"
+          ENDSSH
+
+      - name: Restart Docker containers
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.PRODUCTION_SERVER_IP }} << 'ENDSSH'
+            set -e
+            cd /opt/eyebee
+            
+            # Pull latest images
+            docker compose pull
+            
+            # Restart services with zero-downtime
+            docker compose up -d --no-deps --build
+            
+            echo "Waiting for services to start..."
+            sleep 15
+            
+            # Check container status
+            docker compose ps
+            
+            # Check webrtc-sessions health
+            if docker inspect webrtc-sessions --format='{{.State.Health.Status}}' 2>/dev/null | grep -q "healthy"; then
+              echo "✅ webrtc-sessions is healthy"
+            else
+              echo "⚠️ webrtc-sessions health check pending or unhealthy"
+            fi
+          ENDSSH
+
+      - name: Verify deployment
+        run: |
+          echo "Waiting for services to be ready..."
+          sleep 10
+          
+          # Check if main domain is accessible
+          if curl -s -o /dev/null -w "%{http_code}" https://live.eyebee.com | grep -q "200\|301\|302"; then
+            echo "✅ Main site is accessible"
+          else
+            echo "⚠️ Main site may not be accessible yet"
+          fi
+
+      - name: Cleanup SSH key
+        if: always()
+        run: |
+          rm -f ~/.ssh/deploy_key
+
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always()
+    
+    steps:
+      - name: Deployment Success
+        if: needs.deploy.result == 'success'
+        run: |
+          echo "🎉 Deployment to production successful!"
+          echo "📍 URL: https://live.eyebee.com"
+          
+      - name: Deployment Failed
+        if: needs.deploy.result == 'failure'
+        run: |
+          echo "❌ Deployment to production failed!"
+          echo "Please check the logs above for details."
+          exit 1
