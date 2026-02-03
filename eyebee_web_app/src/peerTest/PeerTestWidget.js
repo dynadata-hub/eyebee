@@ -70,7 +70,8 @@ const PeerTestWidget = (props) => {
        
         let mockResults = null;
         if(!props.disabled){
-            const gpu = window.GPU ? new window.GPU() : null;
+            // GPU.js library is not loaded (commented out in index.html)
+            const gpu = null;
             let suite = new window.Benchmark.Suite;
             let speedTest = new SpeedTest();
     
