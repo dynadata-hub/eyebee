@@ -126,6 +126,8 @@ jobs:
             --exclude 'nginx' \
             --exclude 'tmp' \
             --exclude 'temp' \
+            --exclude 'logs' \
+            --exclude '*.log' \
             ./ ${{ secrets.SSH_USER }}@${{ secrets.PRODUCTION_SERVER_IP }}:/opt/eyebee/
 
       - name: Deploy secrets (if changed)
