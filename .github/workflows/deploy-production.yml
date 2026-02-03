@@ -105,6 +105,8 @@ jobs:
         run: |
           cat > .env.production << EOF
           DOMAIN=${{ secrets.DOMAIN }}
+          SERVER_IPV4=${{ secrets.PRODUCTION_SERVER_IP }}
+          SERVER_IPV6=${{ secrets.PRODUCTION_SERVER_IPV6 }}
           LETSENCRYPT_EMAIL=${{ secrets.LETSENCRYPT_EMAIL }}
           FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
           FIREBASE_STORAGE_BUCKET=${{ secrets.FIREBASE_STORAGE_BUCKET }}

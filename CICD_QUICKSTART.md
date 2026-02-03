@@ -22,13 +22,14 @@ Esto mostrará tu clave SSH privada. **Cópiala completa** (incluyendo las líne
 1. Ve a tu repositorio en GitHub
 2. **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
 
-Agrega estos 7 secrets:
+Agrega estos 8 secrets:
 
 | Secret Name | Valor |
 |-------------|-------|
 | `SSH_PRIVATE_KEY` | [Pega la clave del paso 1] |
 | `SSH_USER` | `algol` |
 | `PRODUCTION_SERVER_IP` | `164.92.212.133` |
+| `PRODUCTION_SERVER_IPV6` | `2a03:b0c0:2:f0:0:1:49e8:7001` |
 | `DOMAIN` | `live.eyebee.com` |
 | `LETSENCRYPT_EMAIL` | `admin@eyebee.com` |
 | `FIREBASE_PROJECT_ID` | `eyebee-718a0` |
@@ -84,6 +85,6 @@ Para más detalles, troubleshooting, y opciones avanzadas:
 - Si no puedes conectar, agrega tu clave: `ssh-copy-id algol@164.92.212.133`
 
 **Workflow falla?**
-- Verifica que todos los 7 secrets estén configurados
+- Verifica que todos los 8 secrets estén configurados
 - Revisa los logs en GitHub Actions
 - Consulta `.github/CICD_SETUP.md` sección Troubleshooting
