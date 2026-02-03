@@ -106,7 +106,7 @@ dist
 
 build
 
-public/dependencies/
+# public/dependencies/  # Now tracked in git for deployment
 
 *.zip
 
