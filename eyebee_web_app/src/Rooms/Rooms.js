@@ -4,7 +4,7 @@ import logoEyeBee from "../img/logo_eyebee_fondo_negrov2.jpg";
 import ImageIcon from '@material-ui/icons/Image';
 import { Input, Button, CssBaseline, InputAdornment, Box, InputLabel, IconButton, TextField, useMediaQuery, Select, MenuItem } from "@material-ui/core";
 import DeleteIcon from '@material-ui/icons/Delete';
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -266,6 +266,7 @@ const lightButton = createMuiTheme({
 
 const Rooms = props => {
     const location = useLocation();
+    const navigate = useNavigate();
     const classes = useStyles();
     const [createRoom, setCreateRoom] = useState(false);
     const [showLinks, setShowLinks] = useState(false);
@@ -277,14 +278,14 @@ const Rooms = props => {
 
         const auth = localStorage.getItem("auth");
         if (auth == false || auth == null)
-            props.history.push('/admin/login');
+            navigate('/admin/login');
         loadRooms();
     }, []);
 
     const logout = () => {
         //Todo Login
         localStorage.setItem("auth", false);
-        props.history.push('/admin/login');
+        navigate('/admin/login');
     }
 
     function createData(name, calories, fat, carbs, protein) {

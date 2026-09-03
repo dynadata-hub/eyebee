@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useParams, useLocation } from "react-router-dom";
 
 import RoomAPI from "./Room/RoomAPI";
 import UserAPI from "./UserAPI";
@@ -70,7 +71,8 @@ const useStyles = makeStyles(theme => ({
 const VideoConference = props => {
 
     const classes = useStyles();
-    const { roomId } = props.match.params; // Gets roomId from URL
+    const { roomId } = useParams(); // Gets roomId from URL
+    const location = useLocation();
     const sections = ["joinRoom", "room"];
     const [currentSection, setCurrentSection] = useState("joinRoom");
 
@@ -103,7 +105,7 @@ const VideoConference = props => {
 
     useEffect(() => {
         let jsonQS ;
-        let jsonQS2 = queryString.parse(props.location.search);
+        let jsonQS2 = queryString.parse(location.search);
        
         if(jsonQS2.p){
             let p = jsonQS2.p.replace(/ /g, "+");

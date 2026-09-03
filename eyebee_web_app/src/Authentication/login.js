@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { makeStyles, createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
 import logoEyeBee from "../img/logo_eyebee_fondo_negrov2.jpg";
 import ImageIcon from '@material-ui/icons/Image';
@@ -212,6 +213,7 @@ const lightButton = createMuiTheme({
 
 const Login = props => {
 
+    const navigate = useNavigate();
     const xsScreen = useMediaQuery(theme.breakpoints.up("xs"));
     const mdScreen = useMediaQuery(theme.breakpoints.up("md"));
     const lgScreen = useMediaQuery(theme.breakpoints.up("lg"));
@@ -263,7 +265,7 @@ const Login = props => {
             console.log(result);
             if (result.status === 200) {
                 localStorage.setItem("auth", true);
-                props.history.push({ pathname: '/admin/rooms', state: { user: result.data.data } });
+                navigate('/admin/rooms', { state: { user: result.data.data } });
             }
             else
                 alert("Usuario o contraseña incorrecta");
