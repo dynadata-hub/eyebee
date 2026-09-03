@@ -1,4 +1,4 @@
-import { React, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { Close, LocalActivity, PanTool, Send } from "@material-ui/icons";
 import { CircularProgress, Box, ThemeProvider, CssBaseline, Fade, Collapse } from "@material-ui/core";

@@ -1,4 +1,4 @@
-import { React, useState, useEffect, createRef } from "react";
+import React, { useState, useEffect, createRef } from "react";
 import Camera from "./Camera";
 import TestCamera from "./TestCamera";
 import { Input, Button, CssBaseline, InputAdornment, Box, InputLabel, IconButton, TextField, ThemeProvider, useMediaQuery, Select, MenuItem } from "@material-ui/core";

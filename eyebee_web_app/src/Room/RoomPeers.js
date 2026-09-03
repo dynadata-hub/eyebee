@@ -1,4 +1,4 @@
-import {React, useState,useEffect,memo} from "react";
+import React, { useState,useEffect,memo} from "react";
 import { makeStyles,ThemeProvider,useTheme,createMuiTheme } from '@material-ui/core/styles';
 import HexagonalAvatarWidget from "../HexagonalAvatarWidget";
 import PeerListItem from "../PeerListItem";
