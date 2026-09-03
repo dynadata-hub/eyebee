@@ -1,7 +1,8 @@
 import React,{useEffect, useState} from "react";
 
-import { makeStyles,ThemeProvider,useTheme} from '@material-ui/core/styles';
-import {CssBaseline,IconButton,useMediaQuery} from "@material-ui/core";
+import { ThemeProvider, StyledEngineProvider, useTheme } from '@mui/material/styles';
+import makeStyles from '@mui/styles/makeStyles';
+import {CssBaseline,IconButton,useMediaQuery} from "@mui/material";
 
 const useStyles = makeStyles(theme => ({
     mainBox:{
@@ -28,24 +29,26 @@ const useStyles = makeStyles(theme => ({
 const PeerListItem = (props) => {
     const theme = useTheme();
     const classes = useStyles();
-    const xsScreen = useMediaQuery(theme.breakpoints.down("xs"));
+    const xsScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
     return (
-        <ThemeProvider theme={theme} >
-            <CssBaseline/>
-            <div className={classes.mainBox}>
-                <div style={{
-                    margin:"0 1em 0 0"
-                }}>
-                    {props.avatar}
+        <StyledEngineProvider injectFirst>
+            (<ThemeProvider theme={theme} >
+                <CssBaseline/>
+                <div className={classes.mainBox}>
+                    <div style={{
+                        margin:"0 1em 0 0"
+                    }}>
+                        {props.avatar}
+                    </div>
+                    
+                    <p className={classes.label}>{props.label}</p>
+                    <div className={classes.actionsBox}>
+                        {props.children}
+                    </div>
                 </div>
-                
-                <p className={classes.label}>{props.label}</p>
-                <div className={classes.actionsBox}>
-                    {props.children}
-                </div>
-            </div>
-        </ThemeProvider>
+            </ThemeProvider>)
+        </StyledEngineProvider>
     );
 };
 

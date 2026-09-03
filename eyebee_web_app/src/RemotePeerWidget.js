@@ -1,8 +1,9 @@
-import { Close, PanTool, ScreenShare } from "@material-ui/icons";
+import { Close, PanTool, ScreenShare } from "@mui/icons-material";
 import React, { useEffect } from "react";
 import MediaPlayerWidget from "./MediaPlayerWidget";
-import { IconButton, CssBaseline, SvgIcon } from "@material-ui/core";
-import { makeStyles, ThemeProvider, useTheme } from '@material-ui/core/styles';
+import { IconButton, CssBaseline, SvgIcon } from "@mui/material";
+import { ThemeProvider, StyledEngineProvider, useTheme } from '@mui/material/styles';
+import makeStyles from '@mui/styles/makeStyles';
 import { ReactComponent as ScreenShareOnSVG } from './img/screen-share-on2.svg';
 import { ReactComponent as HandOnSVG } from './img/hand-on.svg';
 
@@ -80,127 +81,133 @@ const RemotePeerWidget = (props) => {
     }
 
     return (
+        <StyledEngineProvider injectFirst>
+            (<ThemeProvider theme={theme}>
+                <CssBaseline />
+                <div className={classes.mainBox} onClick={widgetClicked} >
 
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <div className={classes.mainBox} onClick={widgetClicked} >
+                    {
+                        props.presentationRequested ?
+                            (
+                                // <div style={{
+                                //     display: "flex",
+                                //     position: "absolute",
+                                //     top: props.playerSize * 0.035,
+                                //     left: "0",
+                                //     width: "100%",
+                                //     justifyContent: "center",
+                                //     zIndex: "3"
+                                // }}>
+                                //     <IconButton style={{
+                                //         backgroundColor: "transparent"
+                                //     }} onClick={grantPresentation}>
+                                //         <PanTool style={{
+                                //             marginRight: "1em",
+                                //             color: theme.palette.primary.main
+                                //         }} />
+                                //     </IconButton>
+                                //     <IconButton style={{
+                                //         backgroundColor: "transparent"
+                                //     }} onClick={removePresentation}>
+                                //         <Close style={{
+                                //             color: "#424242"
+                                //         }} />
+                                //     </IconButton>
 
-                {
-                    props.presentationRequested ?
-                        (
-                            // <div style={{
-                            //     display: "flex",
-                            //     position: "absolute",
-                            //     top: props.playerSize * 0.035,
-                            //     left: "0",
-                            //     width: "100%",
-                            //     justifyContent: "center",
-                            //     zIndex: "3"
-                            // }}>
-                            //     <IconButton style={{
-                            //         backgroundColor: "transparent"
-                            //     }} onClick={grantPresentation}>
-                            //         <PanTool style={{
-                            //             marginRight: "1em",
-                            //             color: theme.palette.primary.main
-                            //         }} />
-                            //     </IconButton>
-                            //     <IconButton style={{
-                            //         backgroundColor: "transparent"
-                            //     }} onClick={removePresentation}>
-                            //         <Close style={{
-                            //             color: "#424242"
-                            //         }} />
-                            //     </IconButton>
+                                // </div>
 
-                            // </div>
-
-                            <div style={{
-                                position: "absolute",
-                                left: "17px",
-                                zIndex: "3"
-                            }}>
-                                <IconButton style={{
-                                    backgroundColor: "transparent"
-                                }} onClick={grantPresentation}>
-                                    <HandIcon style={{ ...theme.defaultIcon }} color="primary" />
-
-
-                                </IconButton>
-
-                            </div>
+                                <div style={{
+                                    position: "absolute",
+                                    left: "17px",
+                                    zIndex: "3"
+                                }}>
+                                    <IconButton
+                                        style={{
+                                            backgroundColor: "transparent"
+                                        }}
+                                        onClick={grantPresentation}
+                                        size="large">
+                                        <HandIcon style={{ ...theme.defaultIcon }} color="primary" />
 
 
-                        )
-                        :
-                        (
-                            <div />
-                        )
-                }
+                                    </IconButton>
 
-                {
-                    props.showScreenIcon && props.localStreams && Object.keys(props.localStreams).find(l => { return props.localStreams[l].label === "screen" }) ?
-                        (
-                            <div style={{
-                                position: "absolute",
-                                right: "17px",
-                                zIndex: "3"
-                            }}>
-                                <IconButton style={{
-                                    backgroundColor: "transparent"
-                                }} onClick={props.goToScreen}>
-                                    <ScreenShareIcon style={{ ...theme.defaultIcon }} color="primary" />
-
-                                    {/* <ScreenShare style={{
-                                        marginRight:"1em",
-                                        color: "#4FC16F"
-                                }}/> */}
+                                </div>
 
 
-                                </IconButton>
+                            )
+                            :
+                            (
+                                <div />
+                            )
+                    }
 
-                            </div>
+                    {
+                        props.showScreenIcon && props.localStreams && Object.keys(props.localStreams).find(l => { return props.localStreams[l].label === "screen" }) ?
+                            (
+                                <div style={{
+                                    position: "absolute",
+                                    right: "17px",
+                                    zIndex: "3"
+                                }}>
+                                    <IconButton
+                                        style={{
+                                            backgroundColor: "transparent"
+                                        }}
+                                        onClick={props.goToScreen}
+                                        size="large">
+                                        <ScreenShareIcon style={{ ...theme.defaultIcon }} color="primary" />
 
-                        )
-                        :
-                        (
-                            <div />
-                        )
-                }
-
-                    <MediaPlayerWidget
-                                nomedia={props.nomedia}
-                                isCameraEnable={props.isCameraEnable}
-                                avatar={props.avatar}
-                                playerSize={props.playerSize || "8em"}
-                                background={props.presenter ? "primary" : "secondary"}
-                                label={props.label} volume={1}
-                                stream={props.streams ? props.streams["camera"] : null}
-                                // generateNewStream={props.generateNewStream}
-                                />
-
-                {/* {
-                    props.nomedia || (props.streams ) ?
-                        (
-                            <MediaPlayerWidget
-                                nomedia={props.nomedia}
-                                isCameraEnable={props.isCameraEnable}
-                                avatar={props.avatar}
-                                playerSize={props.playerSize || "8em"}
-                                background={props.presenter ? "primary" : "secondary"}
-                                label={props.label} volume={1}
-                                stream={props.streams ? props.streams["camera"] : null} />
-                        )
-                        :
-                        (
-                            <div />
-                        )
-                } */}
+                                        {/* <ScreenShare style={{
+                                            marginRight:"1em",
+                                            color: "#4FC16F"
+                                    }}/> */}
 
 
-            </div>
-        </ThemeProvider>
+                                    </IconButton>
 
+                                </div>
+
+                            )
+                            :
+                            (
+                                <div />
+                            )
+                    }
+
+                        <MediaPlayerWidget
+                                    nomedia={props.nomedia}
+                                    isCameraEnable={props.isCameraEnable}
+                                    avatar={props.avatar}
+                                    playerSize={props.playerSize || "8em"}
+                                    background={props.presenter ? "primary" : "secondary"}
+                                    label={props.label} volume={1}
+                                    stream={props.streams ? props.streams["camera"] : null}
+                                    // generateNewStream={props.generateNewStream}
+                                    />
+
+                    {/* {
+                        props.nomedia || (props.streams ) ?
+                            (
+                                <MediaPlayerWidget
+                                    nomedia={props.nomedia}
+                                    isCameraEnable={props.isCameraEnable}
+                                    avatar={props.avatar}
+                                    playerSize={props.playerSize || "8em"}
+                                    background={props.presenter ? "primary" : "secondary"}
+                                    label={props.label} volume={1}
+                                    stream={props.streams ? props.streams["camera"] : null} />
+                            )
+                            :
+                            (
+                                <div />
+                            )
+                    } */}
+
+
+                </div>
+            </ThemeProvider>)
+        </StyledEngineProvider>
     );
 };
 

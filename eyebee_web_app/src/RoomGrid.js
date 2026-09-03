@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 
-import { makeStyles, ThemeProvider, useTheme } from '@material-ui/core/styles';
-import { CssBaseline } from "@material-ui/core";
+import { ThemeProvider, StyledEngineProvider, useTheme } from '@mui/material/styles';
+import makeStyles from '@mui/styles/makeStyles';
+import { CssBaseline } from "@mui/material";
 import RemotePeerWidget from "./RemotePeerWidget";
 import MediaPlayerWidget from "./MediaPlayerWidget";
 
@@ -369,115 +370,72 @@ const RoomGrid = (props) => {
 
 
     return (
+        <StyledEngineProvider injectFirst>
+            (<ThemeProvider theme={theme} >
+                <CssBaseline />
+                {/* { !props.userData.sfu ? */}
+                {true ?
+                    (
 
-        <ThemeProvider theme={theme} >
-            <CssBaseline />
-            {/* { !props.userData.sfu ? */}
-            {true ?
-                (
+                        <div className={classes.mainBox} style={{
+                            //paddingTop: topPad+"px",
+                            // paddingLeft: topPad+"px"
+                        }} >
 
-                    <div className={classes.mainBox} style={{
-                        //paddingTop: topPad+"px",
-                        // paddingLeft: topPad+"px"
-                    }} >
+                            {
+                                props.isMainPresenter ?
+                                    (
+                                        <MediaPlayerWidget
+                                            isCameraEnable={props.localCamera ? props.localCamera.isVideoEnabled():false}
+                                            avatar={props.userData.avatar}
+                                            background={props.isPresenter ? "primary" : "secondary"}
+                                            volume={0} label={props.userData && props.userData.userName || props.userData.peerId}
+                                            playerSize={props.playerSizes["presenter"]} stream={props.localCamera && props.localCamera.getStream()} />
 
-                        {
-                            props.isMainPresenter ?
-                                (
-                                    <MediaPlayerWidget
-                                        isCameraEnable={props.localCamera ? props.localCamera.isVideoEnabled():false}
-                                        avatar={props.userData.avatar}
-                                        background={props.isPresenter ? "primary" : "secondary"}
-                                        volume={0} label={props.userData && props.userData.userName || props.userData.peerId}
-                                        playerSize={props.playerSizes["presenter"]} stream={props.localCamera && props.localCamera.getStream()} />
-
-                                )
-                                :
-                                (
-                                    <div />
-                                )
-                        }
-
-
-                        {
-                            Object.keys(roomUsers).filter(e => { if (e.owner) { return e.presenter } else { return e !== props.userData.peerId } })
-                                .sort((a, b) => { return roomUsers[a].presenter && !roomUsers[b].presenter ? -1 : 1 })
-                                .map((peerId, index) => {
+                                    )
+                                    :
+                                    (
+                                        <div />
+                                    )
+                            }
 
 
-                                    if (roomUsers[peerId].mainPresenter) {
-                                        return (
-                                            <RemotePeerWidget
-                                                key={peerId}
-                                                nomedia={props.nomedia}
-                                                showScreenIcon={true}
-                                                isCameraEnable={roomUsers[peerId].camera}
-                                                avatar={roomUsers[peerId].avatar}
-                                                background={roomUsers[peerId].presenter ? "primary" : "secondary"}
-                                                // playerSize={roomUsers[peerId].mainPresenter  ? props.playerSizes["presenter"]: (roomUsers[peerId].presenter ? props.playerSizes["presenter"] : props.playerSizes["spectator"]) }
-                                                playerSize={props.playerSizes["presenter"]}
-                                                label={roomUsers[peerId].userName || peerId}
-                                                presentationRequested={roomUsers[peerId].presentationRequested}
-                                                presentationGranted={roomUsers[peerId].presentationGranted}
-                                                onPresentationGranted={props.grantPresentation}
-                                                onPresentationRemoved={props.removePresentation}
-                                                localOwner={props.isOwner}
-                                                localStreams={roomUsers[peerId].localStreams}
-                                                streams={
-
-                                                    getPeerStreamsByLabel(roomUsers, props.remotePeerStreams, peerId)
+                            {
+                                Object.keys(roomUsers).filter(e => { if (e.owner) { return e.presenter } else { return e !== props.userData.peerId } })
+                                    .sort((a, b) => { return roomUsers[a].presenter && !roomUsers[b].presenter ? -1 : 1 })
+                                    .map((peerId, index) => {
 
 
-                                                    // ( props.remotePeerStreams[peerId] && props.remotePeerStreams[peerId][Object.keys(props.remotePeerStreams[peerId])[0]] ) ||
-
-                                                    //         getPeerStreamFromSFU(roomUsers,props.remotePeerStreams,
-                                                    //             peerId,"camera")
-
-
-
-
-                                                }
-                                                peerId={peerId} owner={roomUsers[peerId].owner}
-                                                presenter={roomUsers[peerId].presenter}
-                                                goToScreen={e => props.goToScreen(roomUsers[peerId])}
-                                            />
-
-                                        )
-                                    } else {
-                                        let pos = calculatePosition(index - 1, props.playerSizes["presenter"]);
-                                        if (props.isMainPresenter) {
-                                            pos = calculatePosition(index, props.playerSizes["presenter"]);
-                                        }
-
-                                        return (
-                                            <div key={peerId} className={classes.peerItem}
-                                                style={{
-                                                    position: roomUsers[peerId].owner ? "relative" : "absolute",
-                                                    // transform: !roomUsers[peerId].owner ? "rotate("+( ((index*48)-46) / Math.pow(2,row-1)  )+"deg) translate("+(props.playerSizes["owner"]*0.85*row)+"px,"+((props.playerSizes["owner"]*0.33)*row)+"px) rotate("+(   (-(index*48)+46)  / Math.pow(2,row-1)  )+"deg) " : "none",
-                                                    transform: !roomUsers[peerId].owner ? "rotate(" + pos.finalAngle + "deg) translate(" + (pos.radius) + "px) rotate(" + (-pos.finalAngle) + "deg) " : "none"
-
-                                                }}>
-
+                                        if (roomUsers[peerId].mainPresenter) {
+                                            return (
                                                 <RemotePeerWidget
+                                                    key={peerId}
                                                     nomedia={props.nomedia}
                                                     showScreenIcon={true}
                                                     isCameraEnable={roomUsers[peerId].camera}
                                                     avatar={roomUsers[peerId].avatar}
                                                     background={roomUsers[peerId].presenter ? "primary" : "secondary"}
-                                                    playerSize={pos.playerSize}
+                                                    // playerSize={roomUsers[peerId].mainPresenter  ? props.playerSizes["presenter"]: (roomUsers[peerId].presenter ? props.playerSizes["presenter"] : props.playerSizes["spectator"]) }
+                                                    playerSize={props.playerSizes["presenter"]}
                                                     label={roomUsers[peerId].userName || peerId}
                                                     presentationRequested={roomUsers[peerId].presentationRequested}
                                                     presentationGranted={roomUsers[peerId].presentationGranted}
                                                     onPresentationGranted={props.grantPresentation}
                                                     onPresentationRemoved={props.removePresentation}
                                                     localOwner={props.isOwner}
-                                                    //streams={props.remotePeerStreams[peerId]}
                                                     localStreams={roomUsers[peerId].localStreams}
                                                     streams={
-                                                        //    ( props.remotePeerStreams[peerId] && props.remotePeerStreams[peerId][Object.keys(props.remotePeerStreams[peerId])[0]] ) ||
 
-                                                        //     getPeerStreamFromSFU(roomUsers,props.remotePeerStreams,peerId,"camera")
                                                         getPeerStreamsByLabel(roomUsers, props.remotePeerStreams, peerId)
+
+
+                                                        // ( props.remotePeerStreams[peerId] && props.remotePeerStreams[peerId][Object.keys(props.remotePeerStreams[peerId])[0]] ) ||
+
+                                                        //         getPeerStreamFromSFU(roomUsers,props.remotePeerStreams,
+                                                        //             peerId,"camera")
+
+
+
 
                                                     }
                                                     peerId={peerId} owner={roomUsers[peerId].owner}
@@ -485,25 +443,69 @@ const RoomGrid = (props) => {
                                                     goToScreen={e => props.goToScreen(roomUsers[peerId])}
                                                 />
 
-                                            </div>
+                                            )
+                                        } else {
+                                            let pos = calculatePosition(index - 1, props.playerSizes["presenter"]);
+                                            if (props.isMainPresenter) {
+                                                pos = calculatePosition(index, props.playerSizes["presenter"]);
+                                            }
+
+                                            return (
+                                                <div key={peerId} className={classes.peerItem}
+                                                    style={{
+                                                        position: roomUsers[peerId].owner ? "relative" : "absolute",
+                                                        // transform: !roomUsers[peerId].owner ? "rotate("+( ((index*48)-46) / Math.pow(2,row-1)  )+"deg) translate("+(props.playerSizes["owner"]*0.85*row)+"px,"+((props.playerSizes["owner"]*0.33)*row)+"px) rotate("+(   (-(index*48)+46)  / Math.pow(2,row-1)  )+"deg) " : "none",
+                                                        transform: !roomUsers[peerId].owner ? "rotate(" + pos.finalAngle + "deg) translate(" + (pos.radius) + "px) rotate(" + (-pos.finalAngle) + "deg) " : "none"
+
+                                                    }}>
+
+                                                    <RemotePeerWidget
+                                                        nomedia={props.nomedia}
+                                                        showScreenIcon={true}
+                                                        isCameraEnable={roomUsers[peerId].camera}
+                                                        avatar={roomUsers[peerId].avatar}
+                                                        background={roomUsers[peerId].presenter ? "primary" : "secondary"}
+                                                        playerSize={pos.playerSize}
+                                                        label={roomUsers[peerId].userName || peerId}
+                                                        presentationRequested={roomUsers[peerId].presentationRequested}
+                                                        presentationGranted={roomUsers[peerId].presentationGranted}
+                                                        onPresentationGranted={props.grantPresentation}
+                                                        onPresentationRemoved={props.removePresentation}
+                                                        localOwner={props.isOwner}
+                                                        //streams={props.remotePeerStreams[peerId]}
+                                                        localStreams={roomUsers[peerId].localStreams}
+                                                        streams={
+                                                            //    ( props.remotePeerStreams[peerId] && props.remotePeerStreams[peerId][Object.keys(props.remotePeerStreams[peerId])[0]] ) ||
+
+                                                            //     getPeerStreamFromSFU(roomUsers,props.remotePeerStreams,peerId,"camera")
+                                                            getPeerStreamsByLabel(roomUsers, props.remotePeerStreams, peerId)
+
+                                                        }
+                                                        peerId={peerId} owner={roomUsers[peerId].owner}
+                                                        presenter={roomUsers[peerId].presenter}
+                                                        goToScreen={e => props.goToScreen(roomUsers[peerId])}
+                                                    />
+
+                                                </div>
 
 
-                                        )
-                                        //}
+                                            )
+                                            //}
 
-                                    }
-                                })
-                        }
+                                        }
+                                    })
+                            }
 
-                    </div>
-                )
-                :
-                (
-                    <div />
-                )
-            }
+                        </div>
+                    )
+                    :
+                    (
+                        <div />
+                    )
+                }
 
-        </ThemeProvider>
+            </ThemeProvider>)
+        </StyledEngineProvider>
     );
 };
 

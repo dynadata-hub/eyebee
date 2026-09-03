@@ -1,15 +1,24 @@
 import React, { useState, useEffect, createRef } from "react";
 
-import {Button, CssBaseline, ThemeProvider, useMediaQuery} from "@material-ui/core";
-import { makeStyles, createMuiTheme, useTheme } from '@material-ui/core/styles';
+import {
+    Button,
+    CssBaseline,
+    ThemeProvider,
+    StyledEngineProvider,
+    useMediaQuery,
+    adaptV4Theme,
+} from "@mui/material";
+import { createTheme, useTheme } from '@mui/material/styles';
 
-//import { Adb, Mic, MicOff, Videocam, VideocamOff } from '@material-ui/icons';
+import makeStyles from '@mui/styles/makeStyles';
+
+//import { Adb, Mic, MicOff, Videocam, VideocamOff } from '@mui/icons-material';
 
 import logoEyeBee from "./img/logo_eyebee_fondo_negrov2.jpg";
 
 import axios from 'axios';
 
-const darkFormField = createMuiTheme({
+const darkFormField = createTheme(adaptV4Theme({
     palette: {
         background: {
             default: "#212121",
@@ -32,9 +41,9 @@ const darkFormField = createMuiTheme({
             disabledBackground: "#ffe082"
         }
     }
-});
+}));
 
-const lightButton = createMuiTheme({
+const lightButton = createTheme(adaptV4Theme({
     palette: {
         primary: {
             main: "#F29F39",
@@ -54,7 +63,7 @@ const lightButton = createMuiTheme({
             disabledBackground: "#292929"
         }
     }
-});
+}));
 
 const useStyles = makeStyles(theme => ({
     mainBox: {
@@ -76,7 +85,7 @@ const useStyles = makeStyles(theme => ({
     [theme.breakpoints.up("md")]: {
         
     },
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
         
     },
     actionsBox: {
@@ -146,35 +155,37 @@ const NotFoundView = (props) => {
 
 
     return (
+        <StyledEngineProvider injectFirst>
+            (<ThemeProvider theme={theme}>
+                <CssBaseline />
+                <div className={classes.mainBox}>
 
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <div className={classes.mainBox}>
+                    <div className={classes.logoBox}>
+                        <img style={{
+                            height: logoSize + "em",
+                            width: "auto"
+                        }} src={logoEyeBee} />
+                    </div>
+                    
 
-                <div className={classes.logoBox}>
-                    <img style={{
-                        height: logoSize + "em",
-                        width: "auto"
-                    }} src={logoEyeBee} />
+                    <div className={classes.messageBox}>
+                        <h4 className={classes.mainMessage}>Sorry, this section does not exist.</h4>
+                    </div>
+
+                    <div className={classes.actionsBox}>
+                        <StyledEngineProvider injectFirst>
+                            <ThemeProvider theme={lightButton} >
+                                <Button variant="contained"
+                                    color="primary" className={`${classes.roundedBtn} ${classes.roomActionBtn}`}
+                                    onClick={props.toStart ? props.toStart : () => {}}>Go to start</Button>
+                            </ThemeProvider>
+                        </StyledEngineProvider>
+
+                    </div>
+
                 </div>
-                
-
-                <div className={classes.messageBox}>
-                    <h4 className={classes.mainMessage}>Sorry, this section does not exist.</h4>
-                </div>
-
-                <div className={classes.actionsBox}>
-                    <ThemeProvider theme={lightButton} >
-                        <Button variant="contained"
-                            color="primary" className={`${classes.roundedBtn} ${classes.roomActionBtn}`}
-                            onClick={props.toStart ? props.toStart : () => {}}>Go to start</Button>
-                    </ThemeProvider>
-
-                </div>
-
-            </div>
-        </ThemeProvider>
-
+            </ThemeProvider>)
+        </StyledEngineProvider>
     );
 };
 

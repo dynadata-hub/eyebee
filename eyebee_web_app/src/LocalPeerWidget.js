@@ -4,9 +4,9 @@ import React, { useState,useEffect,  useRef } from "react";
 import "./hexagon1.css";
 import Camera from "./Camera";
 import Screen from "./Screen";
-import {Paper,Card,Button,IconButton} from "@material-ui/core";
-import { makeStyles } from '@material-ui/core/styles';
-import {Mic,MicOff,Videocam,VideocamOff,ScreenShare,StopScreenShare,PanTool,Close} from "@material-ui/icons";
+import {Paper,Card,Button,IconButton} from "@mui/material";
+import makeStyles from '@mui/styles/makeStyles';
+import {Mic,MicOff,Videocam,VideocamOff,ScreenShare,StopScreenShare,PanTool,Close} from "@mui/icons-material";
 
 const useStyles = makeStyles(theme => ({
 
@@ -183,14 +183,13 @@ const LocalPeerWidget = (props) => {
     }
 
     return (
-        
         <div className="pw-container">
             <strong className="pw-name">{props.peerId} {props.isOwner ? "(Owner)" :  props.isPresenter ? "(Presenter)" : ""  }</strong>
             {
                 !props.isOwner && !props.isPresenter ? 
                 (
                     <div className={classes.actionsBox}>
-                        <IconButton  onClick={requestPresentation}>
+                        <IconButton onClick={requestPresentation} size="large">
                                 <PanTool style={{
                                         color: props.presentationRequested ? "#ffc107" : props.presentationGranted ? "#4caf50"  :  "#424242"
                                 }}/>
@@ -206,7 +205,7 @@ const LocalPeerWidget = (props) => {
                  !props.isOwner && props.isPresenter ? 
                 (
                     <div className={classes.actionsBox}>
-                        <IconButton  onClick={cancelPresentation}>
+                        <IconButton onClick={cancelPresentation} size="large">
                             <Close style={{
                                     color: "#424242"
                             }}/>
@@ -220,8 +219,6 @@ const LocalPeerWidget = (props) => {
                 )
             }
 
-                
-           
             <div className={classes.videoElementsBox}>
                         {/* <div className="hex">
                             <video className="pw-video-el" ref={videoEl} autoPlay />
@@ -272,7 +269,7 @@ const LocalPeerWidget = (props) => {
 
             </div>
             <div className={classes.actionsBox}>
-                <IconButton  onClick={toggleCamera}>
+                <IconButton onClick={toggleCamera} size="large">
                     {
                         streamsStatus.camera ?
                         (
@@ -286,7 +283,7 @@ const LocalPeerWidget = (props) => {
                 
                 </IconButton>
                 
-                <IconButton onClick={toggleMic}> 
+                <IconButton onClick={toggleMic} size="large"> 
                     {
                         streamsStatus.mic ?
                         (
@@ -299,7 +296,7 @@ const LocalPeerWidget = (props) => {
                     }
                 
                 </IconButton>
-                <IconButton onClick={toggleScreen}>
+                <IconButton onClick={toggleScreen} size="large">
                 {
                         streamsStatus.screen ?
                         (

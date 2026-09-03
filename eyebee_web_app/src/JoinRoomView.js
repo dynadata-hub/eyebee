@@ -1,18 +1,35 @@
 import React, { useState, useEffect, createRef } from "react";
 import Camera from "./Camera";
 import TestCamera from "./TestCamera";
-import { Input, Button, CssBaseline, InputAdornment, Box, InputLabel, IconButton, TextField, ThemeProvider, useMediaQuery, Select, MenuItem } from "@material-ui/core";
-import { makeStyles, createMuiTheme, useTheme } from '@material-ui/core/styles';
+import {
+    Input,
+    Button,
+    CssBaseline,
+    InputAdornment,
+    Box,
+    InputLabel,
+    IconButton,
+    TextField,
+    ThemeProvider,
+    StyledEngineProvider,
+    useMediaQuery,
+    Select,
+    MenuItem,
+    adaptV4Theme,
+} from "@mui/material";
+import { createTheme, useTheme } from '@mui/material/styles';
 
-import { Adb, Mic, MicOff, Videocam, VideocamOff } from '@material-ui/icons';
-import ImageIcon from '@material-ui/icons/Image';
+import makeStyles from '@mui/styles/makeStyles';
+
+import { Adb, Mic, MicOff, Videocam, VideocamOff } from '@mui/icons-material';
+import ImageIcon from '@mui/icons-material/Image';
 import MediaPlayerWidget from "./MediaPlayerWidget";
 import logoEyeBee from "./img/logo_eyebee_fondo_negrov2.jpg";
 import PeerTestWidget from "./peerTest/PeerTestWidget";
 
 import axios from 'axios';
 
-const darkFormField = createMuiTheme({
+const darkFormField = createTheme(adaptV4Theme({
     palette: {
         background: {
             default: "#212121",
@@ -35,9 +52,9 @@ const darkFormField = createMuiTheme({
             disabledBackground: "#ffe082"
         }
     }
-});
+}));
 
-const lightButton = createMuiTheme({
+const lightButton = createTheme(adaptV4Theme({
     palette: {
         primary: {
             main: "#F29F39",
@@ -57,7 +74,7 @@ const lightButton = createMuiTheme({
             disabledBackground: "#292929"
         }
     }
-});
+}));
 
 const useStyles = makeStyles(theme => ({
     mainBox: {
@@ -99,7 +116,7 @@ const useStyles = makeStyles(theme => ({
             maxWidth: "25em"
         }
     },
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
         mediaSelectionBox: {
             margin: "1em 0"
         },
@@ -821,207 +838,211 @@ const JoinRoomView = (props) => {
     }
 
     return (
+        <StyledEngineProvider injectFirst>
+            (<ThemeProvider theme={theme}>
+                <CssBaseline />
+                <div className={classes.mainBox}>
 
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <div className={classes.mainBox}>
+                    <div className={classes.logoBox}>
+                        <img style={{
+                            height: logoSize + "em",
+                            width: "auto"
+                        }} src={logoEyeBee} />
+                    </div>
+                    <div style={{
+                        margin: "1em 0 1em 0"
+                    }}>
+                        <PeerTestWidget showStats={props.showPeerTestStats} disabled={props.testDisabled} forcedScores={props.userData.forcedScores} onTestFinished={peerTestFinished} />
+                    </div>
 
-                <div className={classes.logoBox}>
-                    <img style={{
-                        height: logoSize + "em",
-                        width: "auto"
-                    }} src={logoEyeBee} />
-                </div>
-                <div style={{
-                    margin: "1em 0 1em 0"
-                }}>
-                    <PeerTestWidget showStats={props.showPeerTestStats} disabled={props.testDisabled} forcedScores={props.userData.forcedScores} onTestFinished={peerTestFinished} />
-                </div>
-
-                <div className={classes.mediaBox}>
-                    <MediaPlayerWidget
-                        isCameraEnable={cameraEnable}
-                        nomedia={nomedia}
-                        avatar={file}
-                        playerSize={playerSize}
-                        background={props.userData && props.userData.isPresenter ? "primary" : "secondary"} volume={0} stream={camera && camera.getStream()} />
-                </div>
+                    <div className={classes.mediaBox}>
+                        <MediaPlayerWidget
+                            isCameraEnable={cameraEnable}
+                            nomedia={nomedia}
+                            avatar={file}
+                            playerSize={playerSize}
+                            background={props.userData && props.userData.isPresenter ? "primary" : "secondary"} volume={0} stream={camera && camera.getStream()} />
+                    </div>
 
 
 
-                <div className={classes.actionsBox}>
-                    <Button color={camera && camera.isVideoEnabled() ? "primary" : "secondary"}
-                        style={theme.actionBtn}
-                        onClick={toggleCamera}>
+                    <div className={classes.actionsBox}>
+                        <Button color={camera && camera.isVideoEnabled() ? "primary" : "secondary"}
+                            style={theme.actionBtn}
+                            onClick={toggleCamera}>
+                            {
+                                streamsStatus.camera ?
+                                    (
+                                        <Videocam style={theme.defaultIcon} />
+                                    )
+                                    :
+                                    (
+                                        <VideocamOff style={theme.defaultIcon} />
+                                    )
+                            }
+
+                        </Button>
                         {
-                            streamsStatus.camera ?
+                            props.userData.isOwner || props.userData.isPresenter ?
                                 (
-                                    <Videocam style={theme.defaultIcon} />
+                                    <Button color={camera && camera.isAudioEnabled() ? "primary" : "secondary"}
+                                        style={theme.actionBtn}
+                                        onClick={toggleMic}>
+                                        {
+                                            streamsStatus.mic ?
+                                                (
+                                                    <Mic style={theme.defaultIcon} />
+                                                )
+                                                :
+                                                (
+                                                    <MicOff style={theme.defaultIcon} />
+                                                )
+                                        }
+
+                                    </Button>
                                 )
                                 :
                                 (
-                                    <VideocamOff style={theme.defaultIcon} />
+                                    <div />
                                 )
                         }
+                        <Button color={"primary"}
+                            style={theme.actionBtn}
+                            onClick={clickInUploadInput}>
+                            <ImageIcon style={theme.defaultIcon} />
+                        </Button>
 
-                    </Button>
+
+                    </div>
+
+
+                    <StyledEngineProvider injectFirst>
+                        <ThemeProvider theme={darkFormField} >
+                            
+                            <form autoComplete="on" >
+                                <div className={classes.mediaSelectionBox}>
+                                    
+                                    <TextField
+                                        InputLabelProps={{
+                                            shrink: true,
+                                        }}
+                                        className={classes.userNameField}
+                                        inputProps={{ style: { textAlign: 'center' } }}
+                                        value={userName}
+                                        variant="filled"
+                                        error={usNameFieldStatus ? usNameFieldStatus.type ==="error" : false}
+                                        helperText={usNameFieldStatus ? usNameFieldStatus.longMessage : ""}
+                                        autoComplete="username" label="User name" placeholder="ej: Francisco"
+                                        onChange={usernameChanged} />
+
+                                    <Box style={{
+                                        display: 'flex', flexDirection: "row", justifyContent: "center", alignItems: 'center'
+                                    }} >
+                                        <Videocam color='secondary' />
+                                        <Select
+                                            inputProps={{ style: { textAlign: 'center' } }}
+                                            value={selectedCamera}
+                                            className={classes.deviceField}
+                                            variant="filled"
+                                            label="CÃ¡mara"
+                                            onChange={selectedCameraChanged}
+
+                                        >
+
+                                            {
+                                                availableCameras.map((dev, index) => (
+
+                                                    <MenuItem key={index} value={dev.deviceId}>
+                                                        {dev.label}
+                                                    </MenuItem>
+                                                ))
+                                            }
+                                        </Select>
+                                    </Box>
+
+                                    <Box style={{
+                                        display: 'flex', flexDirection: "row", alignItems: 'center'
+                                    }} >
+                                        <Mic color='secondary' />
+                                        <Select
+                                            inputProps={{ style: { textAlign: 'center' } }}
+                                            value={selectedMic}
+                                            className={classes.deviceField}
+                                            variant="filled"
+                                            label="MicrÃ³fono"
+                                            onChange={selectedMicChanged}
+
+                                        >
+
+                                            {
+                                                availableMics.map((dev, index) => (
+
+                                                    <MenuItem key={index} value={dev.deviceId}>
+                                                        {dev.label}
+                                                    </MenuItem>
+                                                ))
+                                            }
+                                        </Select>
+                                    </Box>
+
+
+
+                                    <input ref={fileInput} accept="image/*" type="file" onChange={onChange} className={classes.hide} />
+                                </div>
+                            </form>
+
+                        </ThemeProvider>
+                    </StyledEngineProvider>
+
+
+
+                    <StyledEngineProvider injectFirst>
+                        <ThemeProvider theme={lightButton} >
+                            <Button id="joinBtn" disabled={joinDisabled || (usNameFieldStatus && usNameFieldStatus.type === "error")} variant="contained"
+                                color="primary" className={`${classes.roundedBtn} ${classes.roomActionBtn}`}
+                                onClick={joinBtnClicked}>Join</Button>
+                        </ThemeProvider>
+                    </StyledEngineProvider>
+
+
+
                     {
-                        props.userData.isOwner || props.userData.isPresenter ?
+                        !props.userData.isOwner ?
                             (
-                                <Button color={camera && camera.isAudioEnabled() ? "primary" : "secondary"}
-                                    style={theme.actionBtn}
-                                    onClick={toggleMic}>
+                                <div className={classes.messageBox}>
                                     {
-                                        streamsStatus.mic ?
-                                            (
-                                                <Mic style={theme.defaultIcon} />
-                                            )
-                                            :
-                                            (
-                                                <MicOff style={theme.defaultIcon} />
-                                            )
+                                        usNameFieldStatus && usNameFieldStatus.message === "MAX_SESSION_PEERS_REACHED" ?
+                                        (
+                                            <p className={classes.message}>Max session participants reached.</p>
+                                        )
+                                        :
+                                        (
+                                            <p className={classes.message}>
+                                                {
+                                                    joinDisabled ?
+                                                        "Wait a moment for the session to start"
+                                                        :
+                                                        "The session has started, you can enter"
+                                                }
+                                            </p>
+                                        )
                                     }
+                                    
 
-                                </Button>
+                                </div>
                             )
                             :
                             (
                                 <div />
                             )
                     }
-                    <Button color={"primary"}
-                        style={theme.actionBtn}
-                        onClick={clickInUploadInput}>
-                        <ImageIcon style={theme.defaultIcon} />
-                    </Button>
+
+
 
 
                 </div>
-
-
-                <ThemeProvider theme={darkFormField} >
-                    
-                    <form autoComplete="on" >
-                        <div className={classes.mediaSelectionBox}>
-                            
-                            <TextField
-                                InputLabelProps={{
-                                    shrink: true,
-                                }}
-                                className={classes.userNameField}
-                                inputProps={{ style: { textAlign: 'center' } }}
-                                value={userName}
-                                variant="filled"
-                                error={usNameFieldStatus ? usNameFieldStatus.type ==="error" : false}
-                                helperText={usNameFieldStatus ? usNameFieldStatus.longMessage : ""}
-                                autoComplete="username" label="User name" placeholder="ej: Francisco"
-                                onChange={usernameChanged} />
-
-                            <Box style={{
-                                display: 'flex', flexDirection: "row", justifyContent: "center", alignItems: 'center'
-                            }} >
-                                <Videocam color='secondary' />
-                                <Select
-                                    inputProps={{ style: { textAlign: 'center' } }}
-                                    value={selectedCamera}
-                                    className={classes.deviceField}
-                                    variant="filled"
-                                    label="CÃ¡mara"
-                                    onChange={selectedCameraChanged}
-
-                                >
-
-                                    {
-                                        availableCameras.map((dev, index) => (
-
-                                            <MenuItem key={index} value={dev.deviceId}>
-                                                {dev.label}
-                                            </MenuItem>
-                                        ))
-                                    }
-                                </Select>
-                            </Box>
-
-                            <Box style={{
-                                display: 'flex', flexDirection: "row", alignItems: 'center'
-                            }} >
-                                <Mic color='secondary' />
-                                <Select
-                                    inputProps={{ style: { textAlign: 'center' } }}
-                                    value={selectedMic}
-                                    className={classes.deviceField}
-                                    variant="filled"
-                                    label="MicrÃ³fono"
-                                    onChange={selectedMicChanged}
-
-                                >
-
-                                    {
-                                        availableMics.map((dev, index) => (
-
-                                            <MenuItem key={index} value={dev.deviceId}>
-                                                {dev.label}
-                                            </MenuItem>
-                                        ))
-                                    }
-                                </Select>
-                            </Box>
-
-
-
-                            <input ref={fileInput} accept="image/*" type="file" onChange={onChange} className={classes.hide} />
-                        </div>
-                    </form>
-
-                </ThemeProvider>
-
-
-
-                <ThemeProvider theme={lightButton} >
-                    <Button id="joinBtn" disabled={joinDisabled || (usNameFieldStatus && usNameFieldStatus.type === "error")} variant="contained"
-                        color="primary" className={`${classes.roundedBtn} ${classes.roomActionBtn}`}
-                        onClick={joinBtnClicked}>Join</Button>
-                </ThemeProvider>
-
-
-
-                {
-                    !props.userData.isOwner ?
-                        (
-                            <div className={classes.messageBox}>
-                                {
-                                    usNameFieldStatus && usNameFieldStatus.message === "MAX_SESSION_PEERS_REACHED" ?
-                                    (
-                                        <p className={classes.message}>Max session participants reached.</p>
-                                    )
-                                    :
-                                    (
-                                        <p className={classes.message}>
-                                            {
-                                                joinDisabled ?
-                                                    "Wait a moment for the session to start"
-                                                    :
-                                                    "The session has started, you can enter"
-                                            }
-                                        </p>
-                                    )
-                                }
-                                
-
-                            </div>
-                        )
-                        :
-                        (
-                            <div />
-                        )
-                }
-
-
-
-
-            </div>
-        </ThemeProvider>
-
+            </ThemeProvider>)
+        </StyledEngineProvider>
     );
 };
 

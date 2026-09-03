@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 
-import {CssBaseline, Typography,TextField,Button,FormGroup,FormControlLabel,Switch} from "@material-ui/core";
+import {CssBaseline, Typography,TextField,Button,FormGroup,FormControlLabel,Switch} from "@mui/material";
 
-import {Share,PlayArrow} from "@material-ui/icons";
+import {Share,PlayArrow} from "@mui/icons-material";
 
-import { makeStyles, createTheme, ThemeProvider } from '@material-ui/core/styles';
+import { createTheme, ThemeProvider, StyledEngineProvider } from '@mui/material/styles';
+
+import makeStyles from '@mui/styles/makeStyles';
 
 import DarkFormTheme from "../DarkFormTheme";
 
@@ -47,10 +49,10 @@ const useStyles = makeStyles(theme => ({
         [theme.breakpoints.up('sm')]: {
             width:"45em"
         },
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             width:"35em"
         },
-        [theme.breakpoints.down('xs')]: {
+        [theme.breakpoints.down('sm')]: {
             width:"95%"
         },
     },
@@ -70,7 +72,7 @@ const useStyles = makeStyles(theme => ({
         [theme.breakpoints.up('sm')]: {
             flexDirection: "row",
         },
-        [theme.breakpoints.down('xs')]: {
+        [theme.breakpoints.down('sm')]: {
             flexDirection: "column",
         },
     },
@@ -142,120 +144,128 @@ const DemoRoomForm = props => {
     }
 
     return (
+        <StyledEngineProvider injectFirst>
+            (<ThemeProvider theme={DarkFormTheme}>
+                <div className={classes.formBox}>
+                    <div className={classes.form}>
+                        <Typography className={classes.title} >Start a room</Typography>
 
-        <ThemeProvider theme={DarkFormTheme}>
-            <div className={classes.formBox}>
-                <div className={classes.form}>
-                    <Typography className={classes.title} >Start a room</Typography>
-
-                    <ThemeProvider theme={MainTheme}>
-                        <div className={classes.formRow} style={{
-                            margin:"2em 0"
-                        }}>
-                            <div className={classes.roomTypeBox}>
-                                <FormGroup>
-                                    <FormControlLabel
-                                    style={{
-                                        color:MainTheme.palette.primary.contrastText
-                                    }}
-                                    
-                                    control={<Switch 
-                                    color="primary"
-                                        checked={largeRoom}
-                                        onChange={handleSwitchChange}
-                                        inputProps={{ 'aria-label': 'controlled' }}
-                                    >
-
-                                    </Switch>} label={largeRoom ? "Large Room": "Small Room" } />
-                                
-                                </FormGroup>
-                                <Typography style={{
-                                    maxWidth:"80%",
-                                    color: MainTheme.palette.secondary.contrastText,
-                                    textAlign:"justify"
-                                    
+                        <StyledEngineProvider injectFirst>
+                            <ThemeProvider theme={MainTheme}>
+                                <div className={classes.formRow} style={{
+                                    margin:"2em 0"
                                 }}>
-                                    {
-                                        largeRoom ? 
-                                        "The session can scale beyond 5 participants. This mode requires a certain number of peers to have good device capabilities."
-                                        :
-                                        "Allows anyone to join the session regardless of their device's capabilities. Suitable for a small number of participants (5 max)."
+                                    <div className={classes.roomTypeBox}>
+                                        <FormGroup>
+                                            <FormControlLabel
+                                            style={{
+                                                color:MainTheme.palette.primary.contrastText
+                                            }}
+                                            
+                                            control={<Switch 
+                                            color="primary"
+                                                checked={largeRoom}
+                                                onChange={handleSwitchChange}
+                                                inputProps={{ 'aria-label': 'controlled' }}
+                                            >
+
+                                            </Switch>} label={largeRoom ? "Large Room": "Small Room" } />
                                         
-                                    }
-                                </Typography>
-                            </div>
-                        
-
-                            
-                        </div>
-                    </ThemeProvider>
-                    
-                    {
-                        largeRoom ?
-                        (
-                            <div className={classes.columnBox}>
-                                <TextField color="primary" className={classes.textField} multiline={true} variant="outlined"
-                                    InputLabelProps={{
-                                        shrink: true,
-                                    }}
-                                    helperText="Link to start the session"
-                                    label="Owner Room Link" value={ownerRoomURL} />
-                                 <ThemeProvider theme={MainTheme}>
-                                    <Button color="primary" variant="contained" className={classes.formBtn} startIcon={
-                                                <PlayArrow/>
-                                    } onClick={onOpenLink}>Start Session</Button>
-                                 </ThemeProvider>
+                                        </FormGroup>
+                                        <Typography style={{
+                                            maxWidth:"80%",
+                                            color: MainTheme.palette.secondary.contrastText,
+                                            textAlign:"justify"
+                                            
+                                        }}>
+                                            {
+                                                largeRoom ? 
+                                                "The session can scale beyond 5 participants. This mode requires a certain number of peers to have good device capabilities."
+                                                :
+                                                "Allows anyone to join the session regardless of their device's capabilities. Suitable for a small number of participants (5 max)."
+                                                
+                                            }
+                                        </Typography>
+                                    </div>
                                 
 
-                                <TextField color="primary" className={classes.textField} multiline={true} variant="outlined"
-                                    InputLabelProps={{
-                                        shrink: true,
-                                    }}
-                                    helperText="Shareable link for others to join as presenters"
-                                    label="Presenters Room Link" value={roomURL} />
-                                 <ThemeProvider theme={MainTheme}>
-                                    <Button color="primary" variant="contained" className={classes.formBtn} startIcon={
-                                        <Share/>
-                                    } onClick={onCopyLink}>{copied ? "Copied" : "Copy Link"}</Button>
-                                 </ThemeProvider>
-                               
-                            </div>
-                        )
-                        :
-                        (       
-                            <div className={classes.columnBox}>
-                                <TextField color="primary" className={classes.textField} multiline={true} variant="outlined"
-                                InputLabelProps={{
-                                    shrink: true,
-                                }}
-                                helperText="Share this link to others"
-                                label="Presenters Room Link" value={roomURL} />
-                                
-                                <div className={classes.formRow}>
-                        
-                                    <ThemeProvider theme={MainTheme}>
-                                        <Button color="primary" variant="contained" className={classes.formBtn} startIcon={
-                                            <PlayArrow/>
-                                        } onClick={onOpenLink}>Start Session</Button>
-                                        <Button color="primary" variant="contained" className={classes.formBtn} startIcon={
-                                            <Share/>
-                                        } onClick={onCopyLink}>{copied ? "Copied" : "Copy Link"}</Button>
-                                    </ThemeProvider>
                                     
                                 </div>
-                            </div>             
+                            </ThemeProvider>
+                        </StyledEngineProvider>
+                        
+                        {
+                            largeRoom ?
+                            (
+                                <div className={classes.columnBox}>
+                                    <TextField color="primary" className={classes.textField} multiline={true} variant="outlined"
+                                        InputLabelProps={{
+                                            shrink: true,
+                                        }}
+                                        helperText="Link to start the session"
+                                        label="Owner Room Link" value={ownerRoomURL} />
+                                     <StyledEngineProvider injectFirst>
+                                         <ThemeProvider theme={MainTheme}>
+                                            <Button color="primary" variant="contained" className={classes.formBtn} startIcon={
+                                                        <PlayArrow/>
+                                            } onClick={onOpenLink}>Start Session</Button>
+                                         </ThemeProvider>
+                                     </StyledEngineProvider>
+                                    
+
+                                    <TextField color="primary" className={classes.textField} multiline={true} variant="outlined"
+                                        InputLabelProps={{
+                                            shrink: true,
+                                        }}
+                                        helperText="Shareable link for others to join as presenters"
+                                        label="Presenters Room Link" value={roomURL} />
+                                     <StyledEngineProvider injectFirst>
+                                         <ThemeProvider theme={MainTheme}>
+                                            <Button color="primary" variant="contained" className={classes.formBtn} startIcon={
+                                                <Share/>
+                                            } onClick={onCopyLink}>{copied ? "Copied" : "Copy Link"}</Button>
+                                         </ThemeProvider>
+                                     </StyledEngineProvider>
+                                   
+                                </div>
+                            )
+                            :
+                            (       
+                                <div className={classes.columnBox}>
+                                    <TextField color="primary" className={classes.textField} multiline={true} variant="outlined"
+                                    InputLabelProps={{
+                                        shrink: true,
+                                    }}
+                                    helperText="Share this link to others"
+                                    label="Presenters Room Link" value={roomURL} />
+                                    
+                                    <div className={classes.formRow}>
                             
+                                        <StyledEngineProvider injectFirst>
+                                            <ThemeProvider theme={MainTheme}>
+                                                <Button color="primary" variant="contained" className={classes.formBtn} startIcon={
+                                                    <PlayArrow/>
+                                                } onClick={onOpenLink}>Start Session</Button>
+                                                <Button color="primary" variant="contained" className={classes.formBtn} startIcon={
+                                                    <Share/>
+                                                } onClick={onCopyLink}>{copied ? "Copied" : "Copy Link"}</Button>
+                                            </ThemeProvider>
+                                        </StyledEngineProvider>
+                                        
+                                    </div>
+                                </div>             
+                                
 
-                        )
-                    }
+                            )
+                        }
 
 
 
+                    </div>
                 </div>
-            </div>
-        </ThemeProvider>
-
-    )
+            </ThemeProvider>)
+        </StyledEngineProvider>
+    );
 
 }
 

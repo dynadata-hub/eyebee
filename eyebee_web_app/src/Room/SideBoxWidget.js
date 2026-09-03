@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 
-import { makeStyles, ThemeProvider, useTheme } from '@material-ui/core/styles';
+import { ThemeProvider, StyledEngineProvider, useTheme } from '@mui/material/styles';
+import makeStyles from '@mui/styles/makeStyles';
 import ChatWidget from "./ChatWidget";
 import RoomPeers from "./RoomPeers";
 // import SubRooms from "./SubRooms";
-import { CssBaseline } from '@material-ui/core';
+import { CssBaseline } from '@mui/material';
 import PropTypes from 'prop-types';
 import FilledTabsWidget from "../FilledTabsWidget";
 
@@ -86,68 +87,70 @@ const SideBoxWidget = (props) => {
     }, [props.defaultSection]);
 
     return (
-        <ThemeProvider theme={theme} >
-            <CssBaseline />
-            <div className={classes.mainBox}>
-                <div style={{
-                    padding: "2em 0.5em 0.5em 0.5em",
-                    width: "100%"
-                }}>
-                    <FilledTabsWidget
-                        style={{
-                            fontSize: "0.5em"
-                        }}
-                        value={sideTab}
-                        options={["Participants (" + Object.keys(props.roomUsers).length + ")", "Chat"]}
-                        onTabChanged={tabChanged}
-                    />
-                </div>
-
-                <div style={{
-                    display: "flex",
-                    flex: "2",
-                    width: "100%"
-                }}>
-                    <TabPanel value={sideTab} index={0}>
-                        <RoomPeers
-                            remoteStreams={props.remotePeerStreams}
-                            owner={props.userData.isOwner}
-                            presenter={props.userData.isPresenter}
-                            roomId={props.userData.roomId}
-                            userId={props.userData.peerId}
-                            peers={props.roomUsers}
-                            removePresentation={props.removePresentation}
-                            grantPresentation={props.grantPresentation}
+        <StyledEngineProvider injectFirst>
+            (<ThemeProvider theme={theme} >
+                <CssBaseline />
+                <div className={classes.mainBox}>
+                    <div style={{
+                        padding: "2em 0.5em 0.5em 0.5em",
+                        width: "100%"
+                    }}>
+                        <FilledTabsWidget
+                            style={{
+                                fontSize: "0.5em"
+                            }}
+                            value={sideTab}
+                            options={["Participants (" + Object.keys(props.roomUsers).length + ")", "Chat"]}
+                            onTabChanged={tabChanged}
                         />
-                    </TabPanel>
-                    <TabPanel value={sideTab} index={1}>
-                        <ChatWidget style={{
-                            flex: "2"
-                        }}
-                            roomId={props.userData.roomId}
-                            userId={props.userData.peerId}
-                            sendMessage={props.sendMessage}
-                            participants={props.roomUsers} messages={props.messages}
-                        />
-                    </TabPanel>
-                    {/* <TabPanel value={sideTab} index={2}>
-                        <SubRooms style={{
-                            flex: "2"
-                        }}
-                            toggleSideBox={props.toggleSideBox}
-                            toogleCreateNewSubRoom={props.toogleCreateNewSubRoom}
-                            roomId={props.userData.roomId}
-                            userId={props.userData.peerId}
-                            sendMessage={props.sendMessage}
-                            participants={props.roomUsers}
-                            createSubRoom={props.createSubRoom} subRooms={props.subRooms} />
-                    </TabPanel> */}
+                    </div>
+
+                    <div style={{
+                        display: "flex",
+                        flex: "2",
+                        width: "100%"
+                    }}>
+                        <TabPanel value={sideTab} index={0}>
+                            <RoomPeers
+                                remoteStreams={props.remotePeerStreams}
+                                owner={props.userData.isOwner}
+                                presenter={props.userData.isPresenter}
+                                roomId={props.userData.roomId}
+                                userId={props.userData.peerId}
+                                peers={props.roomUsers}
+                                removePresentation={props.removePresentation}
+                                grantPresentation={props.grantPresentation}
+                            />
+                        </TabPanel>
+                        <TabPanel value={sideTab} index={1}>
+                            <ChatWidget style={{
+                                flex: "2"
+                            }}
+                                roomId={props.userData.roomId}
+                                userId={props.userData.peerId}
+                                sendMessage={props.sendMessage}
+                                participants={props.roomUsers} messages={props.messages}
+                            />
+                        </TabPanel>
+                        {/* <TabPanel value={sideTab} index={2}>
+                            <SubRooms style={{
+                                flex: "2"
+                            }}
+                                toggleSideBox={props.toggleSideBox}
+                                toogleCreateNewSubRoom={props.toogleCreateNewSubRoom}
+                                roomId={props.userData.roomId}
+                                userId={props.userData.peerId}
+                                sendMessage={props.sendMessage}
+                                participants={props.roomUsers}
+                                createSubRoom={props.createSubRoom} subRooms={props.subRooms} />
+                        </TabPanel> */}
+                    </div>
+
+
+
                 </div>
-
-
-
-            </div>
-        </ThemeProvider>
+            </ThemeProvider>)
+        </StyledEngineProvider>
     );
 };
 

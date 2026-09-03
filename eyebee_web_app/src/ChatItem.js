@@ -1,7 +1,8 @@
 import React,{useEffect, useState} from "react";
 
-import { makeStyles,ThemeProvider,useTheme} from '@material-ui/core/styles';
-import {CssBaseline,IconButton,useMediaQuery} from "@material-ui/core";
+import { ThemeProvider, StyledEngineProvider, useTheme } from '@mui/material/styles';
+import makeStyles from '@mui/styles/makeStyles';
+import {CssBaseline,IconButton,useMediaQuery} from "@mui/material";
 import HexagonalAvatarWidget from "./HexagonalAvatarWidget";
 
 const useStyles = makeStyles(theme => ({
@@ -37,7 +38,7 @@ const useStyles = makeStyles(theme => ({
 const ChatItem = (props) => {
     const theme = useTheme();
     const classes = useStyles();
-    const xsScreen = useMediaQuery(theme.breakpoints.down("xs"));
+    const xsScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const [message,setMessage] = useState(null);
     const [label,setLabel] = useState(null);
     const [user,setUser] = useState(null);
@@ -62,27 +63,29 @@ const ChatItem = (props) => {
     },[props.user]);
 
     return (
-        <ThemeProvider theme={theme} >
-            <CssBaseline/>
-            <div className={classes.mainBox}>
-                <div style={{
-                    display:"flex",
-                    alignItems:"center",
-                    justifyContent:"center"
-                }}>
-                    <HexagonalAvatarWidget background={user && user.presenter ? "primary": "secondary"} />
-                </div>
-                <div style={{
-                    display:"flex",
-                    flex:"2",
-                    alignItems: "center",
-                    justifyContent: "flex-start"
-                }}>
-                    <p className={classes.label}>{user ? (user.userName ? user.userName : user.id): ""}</p><p className={classes.message}>{props.message}</p>
+        <StyledEngineProvider injectFirst>
+            (<ThemeProvider theme={theme} >
+                <CssBaseline/>
+                <div className={classes.mainBox}>
+                    <div style={{
+                        display:"flex",
+                        alignItems:"center",
+                        justifyContent:"center"
+                    }}>
+                        <HexagonalAvatarWidget background={user && user.presenter ? "primary": "secondary"} />
+                    </div>
+                    <div style={{
+                        display:"flex",
+                        flex:"2",
+                        alignItems: "center",
+                        justifyContent: "flex-start"
+                    }}>
+                        <p className={classes.label}>{user ? (user.userName ? user.userName : user.id): ""}</p><p className={classes.message}>{props.message}</p>
 
+                    </div>
                 </div>
-            </div>
-        </ThemeProvider>
+            </ThemeProvider>)
+        </StyledEngineProvider>
     );
 };
 

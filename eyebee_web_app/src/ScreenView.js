@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 
-import { makeStyles, ThemeProvider, useTheme } from '@material-ui/core/styles';
-import { CssBaseline, IconButton } from "@material-ui/core";
-import { ArrowBackIos } from "@material-ui/icons";
+import { ThemeProvider, StyledEngineProvider, useTheme } from '@mui/material/styles';
+import makeStyles from '@mui/styles/makeStyles';
+import { CssBaseline, IconButton } from "@mui/material";
+import { ArrowBackIos } from "@mui/icons-material";
 import MediaPlayerWidget from "./MediaPlayerWidget";
 import RemotePeerWidget from "./RemotePeerWidget";
 
@@ -202,96 +203,102 @@ const ScreenView = (props) => {
     }
 
     return (
-        <ThemeProvider theme={theme} >
-            <CssBaseline />
-            <div className={classes.mainBox} >
-                <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "100%"
-                }}>
+        <StyledEngineProvider injectFirst>
+            (<ThemeProvider theme={theme} >
+                <CssBaseline />
+                <div className={classes.mainBox} >
                     <div style={{
-                        display: "flex"
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "100%"
                     }}>
-                        <IconButton variant="contained" color="primary" onClick={e => leaveScreenView(false)}>
-                            <ArrowBackIos style={theme.defaultIcon} />
-                        </IconButton>
+                        <div style={{
+                            display: "flex"
+                        }}>
+                            <IconButton
+                                variant="contained"
+                                color="primary"
+                                onClick={e => leaveScreenView(false)}
+                                size="large">
+                                <ArrowBackIos style={theme.defaultIcon} />
+                            </IconButton>
+                        </div>
+                        <div style={{
+                            display: "flex",
+                            flex: "2",
+                            justifyContent: "center"
+                        }}>
+                            <MediaPlayerWidget
+                                isCameraEnable={true}
+                                background="primary"
+                                volume={0} label={props.userData.userName}
+                                playerSize={props.presenterPlayerSize}
+                                stream={props.localCamera ? props.localCamera.getStream() : null}
+                            />
+                        </div>
+
+                    </div>
+
+                    <div style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "100%"
+                    }}>
+                        
+                        <div className={classes.userList}>
+                            {
+
+                                Object.keys(props.roomUsers)
+                                    .sort((a, b) => { return props.roomUsers[a].presenter && !props.roomUsers[b].presenter ? -1 : 1 })
+                                    .map((peerId, index) => {
+                                        // console.log("los datos calculados", {
+                                        //     label: props.roomUsers[peerId].userName || peerId
+                                        // });
+
+                                        //getPeerStreamsByLabel(props.roomUsers,props.remotePeerStreams,peerId)["screen"]
+                                        if (props.roomUsers[peerId].localStreams && Object.keys(props.roomUsers[peerId].localStreams).find( ls => { return props.roomUsers[peerId].localStreams[ls].label === "screen"  }))
+                                            return (
+                                                <RemotePeerWidget
+                                                    key={peerId}
+                                                    background={"primary"}
+                                                    isCameraEnable={false}
+                                                    avatar={props.roomUsers[peerId].avatar}
+                                                    playerSize={70}
+                                                    label={props.roomUsers[peerId].userName || peerId}
+                                                    localOwner={false}
+                                                    nomedia={true}
+                                                    streams={null}
+                                                    clickable={true}
+                                                    onClick={e => props.goToScreen(props.roomUsers[peerId])}
+                                                    localStreams={props.roomUsers[peerId].localStreams}
+                                                    peerId={peerId} owner={props.roomUsers[peerId].owner}
+                                                    presenter={props.roomUsers[peerId].presenter}
+                                                    goToScreen={e => props.goToScreen(props.roomUsers[peerId])}
+                                                />)
+                                    })
+                            }
+                        </div>
                     </div>
                     <div style={{
                         display: "flex",
-                        flex: "2",
+                        flex: "auto",
+                        width: "100%",
+                        alignItems: "center",
                         justifyContent: "center"
-                    }}>
-                        <MediaPlayerWidget
-                            isCameraEnable={true}
-                            background="primary"
-                            volume={0} label={props.userData.userName}
-                            playerSize={props.presenterPlayerSize}
-                            stream={props.localCamera ? props.localCamera.getStream() : null}
-                        />
+                    }} >
+                        <video
+                            style={{
+                                width: "45%",
+                                height: "auto",
+                                backgroundColor: "black"
+                            }} ref={videoEl} controls autoPlay />
                     </div>
 
                 </div>
-
-                <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "100%"
-                }}>
-                    
-                    <div className={classes.userList}>
-                        {
-
-                            Object.keys(props.roomUsers)
-                                .sort((a, b) => { return props.roomUsers[a].presenter && !props.roomUsers[b].presenter ? -1 : 1 })
-                                .map((peerId, index) => {
-                                    // console.log("los datos calculados", {
-                                    //     label: props.roomUsers[peerId].userName || peerId
-                                    // });
-
-                                    //getPeerStreamsByLabel(props.roomUsers,props.remotePeerStreams,peerId)["screen"]
-                                    if (props.roomUsers[peerId].localStreams && Object.keys(props.roomUsers[peerId].localStreams).find( ls => { return props.roomUsers[peerId].localStreams[ls].label === "screen"  }))
-                                        return (
-                                            <RemotePeerWidget
-                                                key={peerId}
-                                                background={"primary"}
-                                                isCameraEnable={false}
-                                                avatar={props.roomUsers[peerId].avatar}
-                                                playerSize={70}
-                                                label={props.roomUsers[peerId].userName || peerId}
-                                                localOwner={false}
-                                                nomedia={true}
-                                                streams={null}
-                                                clickable={true}
-                                                onClick={e => props.goToScreen(props.roomUsers[peerId])}
-                                                localStreams={props.roomUsers[peerId].localStreams}
-                                                peerId={peerId} owner={props.roomUsers[peerId].owner}
-                                                presenter={props.roomUsers[peerId].presenter}
-                                                goToScreen={e => props.goToScreen(props.roomUsers[peerId])}
-                                            />)
-                                })
-                        }
-                    </div>
-                </div>
-                <div style={{
-                    display: "flex",
-                    flex: "auto",
-                    width: "100%",
-                    alignItems: "center",
-                    justifyContent: "center"
-                }} >
-                    <video
-                        style={{
-                            width: "45%",
-                            height: "auto",
-                            backgroundColor: "black"
-                        }} ref={videoEl} controls autoPlay />
-                </div>
-
-            </div>
-        </ThemeProvider>
+            </ThemeProvider>)
+        </StyledEngineProvider>
     );
 };
 

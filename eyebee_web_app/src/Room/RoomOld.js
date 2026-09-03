@@ -6,9 +6,23 @@ import "./HexGrid.css";
 // import UserAPI from "./UserAPI";
 import PropTypes from 'prop-types';
 // import useChat from "../useChat";
-import { Paper, Card, Button, IconButton, AppBar, Toolbar, Typography, ThemeProvider, Tab, Tabs } from "@material-ui/core";
-import { makeStyles, createMuiTheme } from '@material-ui/core/styles';
-import { amber, grey } from '@material-ui/core/colors';
+import {
+  Paper,
+  Card,
+  Button,
+  IconButton,
+  AppBar,
+  Toolbar,
+  Typography,
+  ThemeProvider,
+  StyledEngineProvider,
+  Tab,
+  Tabs,
+  adaptV4Theme,
+} from "@mui/material";
+import { createTheme } from '@mui/material/styles';
+import makeStyles from '@mui/styles/makeStyles';
+import { amber, grey } from '@mui/material/colors';
 import queryString from "query-string";
 import RemotePeerWidget from "../RemotePeerWidget";
 import LocalPeerWidget from "../LocalPeerWidget";
@@ -24,7 +38,7 @@ import WebRTCConnectionTest from "../peerTest/webrtc-connection-test";
 import RTCPeerConnectionFactory from "../RTCPeerConnectionFactory";
 import RTCIceCandidateFactory from "../RTCIceCandidateFactory";
 
-const theme = createMuiTheme({
+const theme = createTheme(adaptV4Theme({
   palette: {
     primary: {
 
@@ -35,9 +49,9 @@ const theme = createMuiTheme({
       main: grey[800],
     }
   },
-});
+}));
 
-const appBarTheme = createMuiTheme({
+const appBarTheme = createTheme(adaptV4Theme({
   palette: {
     primary: {
 
@@ -52,7 +66,7 @@ const appBarTheme = createMuiTheme({
       disabledBackground: "#2e2e2e"
     }
   },
-});
+}));
 
 const useStyles = makeStyles(theme => ({
 
@@ -809,7 +823,6 @@ const Room = (props) => {
   }
 
   return (
-
     <div className="room-container">
 
       {/* <div className="room-header">
@@ -845,10 +858,16 @@ const Room = (props) => {
               />
             </div>
             <div className={classes.localPeerActionBox}>
-              <ThemeProvider theme={appBarTheme}>
-                <Button disabled={peerJoined} variant="contained" color="primary" className={`${classes.roundedBtn} ${classes.roomActionBtn}`} onClick={joinBtnClicked}>Join</Button>
-                <Button disabled={!peerJoined} variant="contained" color="default" className={`${classes.roundedBtn} ${classes.roomActionBtn}`} onClick={leaveBtnClicked}>Leave</Button>
-              </ThemeProvider>
+              <StyledEngineProvider injectFirst>
+                <ThemeProvider theme={appBarTheme}>
+                  <Button disabled={peerJoined} variant="contained" color="primary" className={`${classes.roundedBtn} ${classes.roomActionBtn}`} onClick={joinBtnClicked}>Join</Button>
+                  <Button
+                    disabled={!peerJoined}
+                    variant="contained"
+                    className={`${classes.roundedBtn} ${classes.roomActionBtn}`}
+                    onClick={leaveBtnClicked}>Leave</Button>
+                </ThemeProvider>
+              </StyledEngineProvider>
             </div>
 
           </div>
@@ -925,9 +944,7 @@ const Room = (props) => {
 
       </div>
 
-
     </div>
-
   );
 };
 

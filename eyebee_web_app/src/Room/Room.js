@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 
 import "./HexGrid.css";
 
-import { ThemeProvider, CssBaseline, useMediaQuery, Slide } from "@material-ui/core";
-import { makeStyles, useTheme } from '@material-ui/core/styles';
+import { ThemeProvider, StyledEngineProvider, CssBaseline, useMediaQuery, Slide } from "@mui/material";
+import { useTheme } from '@mui/material/styles';
+
+import makeStyles from '@mui/styles/makeStyles';
 
 import RemotePeerWidget from "../RemotePeerWidget";
 
@@ -99,7 +101,7 @@ const Room = (props) => {
     section: ""
   });
 
-  const xsScreen = useMediaQuery(theme.breakpoints.down("xs"));
+  const xsScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const smScreen = useMediaQuery(theme.breakpoints.up("sm"));
   const mdScreen = useMediaQuery(theme.breakpoints.up("md"));
   const lgScreen = useMediaQuery(theme.breakpoints.up("lg"));
@@ -1232,141 +1234,140 @@ const Room = (props) => {
   // }
 
   return (
+    <StyledEngineProvider injectFirst>
+      (<ThemeProvider theme={theme} >
+        <CssBaseline />
+        <div className={classes.mainBox}>
+          <div className={classes.videoCallBox}>
+            {createSubRooState && <CreateNewSubRoom toggleSideBox={toggleSideBox} toogleCreateNewSubRoom={toogleCreateNewSubRoom} createSubRoom={createSubRoom}></CreateNewSubRoom>}
+            <div style={{
+              display: "flex",
+              flex: "2",
+              width: "100%"
+            }}>
+              <div className={classes.roomPlayersBox}>
 
-    <ThemeProvider theme={theme} >
-      <CssBaseline />
-      <div className={classes.mainBox}>
-        <div className={classes.videoCallBox}>
-          {createSubRooState && <CreateNewSubRoom toggleSideBox={toggleSideBox} toogleCreateNewSubRoom={toogleCreateNewSubRoom} createSubRoom={createSubRoom}></CreateNewSubRoom>}
-          <div style={{
-            display: "flex",
-            flex: "2",
-            width: "100%"
-          }}>
-            <div className={classes.roomPlayersBox}>
+                {
+                  !props.userData.isOwner && !isMainPresenter ?
+                    (
+                      <div className={classes.localMediaBox}>
+                        <MediaPlayerWidget
+                          nomedia={false}
+                          isCameraEnable={props.localCamera ? props.localCamera.isVideoEnabled():false}
+                          avatar={props.userData.avatar}
+                          background={isPresenter ? "primary" : "secondary"}
+                          volume={0} label={props.userData && props.userData.userName || props.userData.peerId}
+                          playerSize={125} stream={props.localCamera && props.localCamera.getStream()} />
 
-              {
-                !props.userData.isOwner && !isMainPresenter ?
-                  (
-                    <div className={classes.localMediaBox}>
-                      <MediaPlayerWidget
-                        nomedia={false}
-                        isCameraEnable={props.localCamera ? props.localCamera.isVideoEnabled():false}
-                        avatar={props.userData.avatar}
-                        background={isPresenter ? "primary" : "secondary"}
-                        volume={0} label={props.userData && props.userData.userName || props.userData.peerId}
-                        playerSize={125} stream={props.localCamera && props.localCamera.getStream()} />
+                      </div>
+                    )
+                    :
+                    (
+                      <div />
+                    )
+                }
+                <div style={{
+                  display: "flex",
+                  flex: "2",
+                  width: "100%",
+                  position: "relative",
+                  overflowY: "auto"
+                }}>
+                  <RoomGrid nomedia={false} userData={props.userData} roomUsers={roomUsers} playerSizes={playerSizes}
+                    isMainPresenter={isMainPresenter} isOwner={isOwner} isPresenter={isPresenter}
+                    localCamera={props.localCamera}
+                    goToScreen={goToScreen} grantPresentation={grantPresentation}
+                    remotePeerStreams={remotePeerStreams}
+                    onPresentationRemoved={removePresentation} />
+                </div>
 
-                    </div>
-                  )
-                  :
-                  (
-                    <div />
-                  )
-              }
-              <div style={{
-                display: "flex",
-                flex: "2",
-                width: "100%",
-                position: "relative",
-                overflowY: "auto"
-              }}>
-                <RoomGrid nomedia={false} userData={props.userData} roomUsers={roomUsers} playerSizes={playerSizes}
-                  isMainPresenter={isMainPresenter} isOwner={isOwner} isPresenter={isPresenter}
-                  localCamera={props.localCamera}
-                  goToScreen={goToScreen} grantPresentation={grantPresentation}
-                  remotePeerStreams={remotePeerStreams}
-                  onPresentationRemoved={removePresentation} />
+
               </div>
-
 
             </div>
 
           </div>
 
-        </div>
+          <div style={{
+            display: "flex",
+            flex: "2",
+            position: "absolute",
+            top: "0",
+            right: "0",
+            left: "0",
+            bottom: "4em",
+            backgroundColor: theme.palette.background.default,
+            zIndex: currentSection === "screen" ? "10" : "-2",
+            flexDirection: "column"
+          }}>
+            {
 
-        <div style={{
-          display: "flex",
-          flex: "2",
-          position: "absolute",
-          top: "0",
-          right: "0",
-          left: "0",
-          bottom: "4em",
-          backgroundColor: theme.palette.background.default,
-          zIndex: currentSection === "screen" ? "10" : "-2",
-          flexDirection: "column"
-        }}>
-          {
+              currentSection === "screen" ?
+                (
+                  <ScreenView
+                    userData={props.userData}
+                    roomUsers={roomUsers}
+                    goToScreen={goToScreen}
+                    playerSizes={playerSizes}
+                    remotePeerStreams={remotePeerStreams}
+                    onLeaveScreenView={backToMainSection}
+                    presenterPlayerSize={playerSizes["presenter"] * 0.5}
+                    label={selectedScreenPresenter.userName}
+                    presenterData={selectedScreenPresenter}
+                    localCamera={props.localCamera}
+                    presenterStreams={(remotePeerStreams && remotePeerStreams[selectedScreenPresenter.id])}
+                  />
+                )
+                :
+                (<div />)
+            }
 
-            currentSection === "screen" ?
-              (
-                <ScreenView
-                  userData={props.userData}
-                  roomUsers={roomUsers}
-                  goToScreen={goToScreen}
-                  playerSizes={playerSizes}
-                  remotePeerStreams={remotePeerStreams}
-                  onLeaveScreenView={backToMainSection}
-                  presenterPlayerSize={playerSizes["presenter"] * 0.5}
-                  label={selectedScreenPresenter.userName}
-                  presenterData={selectedScreenPresenter}
-                  localCamera={props.localCamera}
-                  presenterStreams={(remotePeerStreams && remotePeerStreams[selectedScreenPresenter.id])}
-                />
-              )
-              :
-              (<div />)
-          }
-
-        </div>
-
-        <div style={{
-
-          transition: "transform 0.3s ease-in-out",
-          transform: sideBoxState.opened ? "translateX(0)" : "translateX(100%)",
-          position: "absolute",
-          display: sideBoxState.opened ? "flex" : "none",
-          height: !xsScreen ? "90%" : "85%",
-          minWidth: !xsScreen ? "24.5%" : "95%",
-          right: "0",
-          zIndex: "11",
-          boxShadow: "0 0 3em rgba(0,0,0,0.8)"
-        }} >
-
-          <div className={classes.sideBox} >
-            <SideBoxWidget
-              defaultSection={sideBoxState.section}
-              remotePeerStreams={remotePeerStreams}
-              sendMessage={sendMessage} userData={props.userData}
-              removePresentation={removePresentation}
-              grantPresentation={grantPresentation}
-              roomUsers={roomUsers} messages={messages}
-              createSubRoom={createSubRoom} subRooms={subRooms}
-              toogleCreateNewSubRoom={toogleCreateNewSubRoom}
-              toggleSideBox={toggleSideBox}
-            />
           </div>
+
+          <div style={{
+
+            transition: "transform 0.3s ease-in-out",
+            transform: sideBoxState.opened ? "translateX(0)" : "translateX(100%)",
+            position: "absolute",
+            display: sideBoxState.opened ? "flex" : "none",
+            height: !xsScreen ? "90%" : "85%",
+            minWidth: !xsScreen ? "24.5%" : "95%",
+            right: "0",
+            zIndex: "11",
+            boxShadow: "0 0 3em rgba(0,0,0,0.8)"
+          }} >
+
+            <div className={classes.sideBox} >
+              <SideBoxWidget
+                defaultSection={sideBoxState.section}
+                remotePeerStreams={remotePeerStreams}
+                sendMessage={sendMessage} userData={props.userData}
+                removePresentation={removePresentation}
+                grantPresentation={grantPresentation}
+                roomUsers={roomUsers} messages={messages}
+                createSubRoom={createSubRoom} subRooms={subRooms}
+                toogleCreateNewSubRoom={toogleCreateNewSubRoom}
+                toggleSideBox={toggleSideBox}
+              />
+            </div>
+          </div>
+
+          <RoomActionsWidget presenter={isPresenter} owner={isOwner}
+            presentationRequested={presentationRequested} toggleSideBox={toggleSideBox}
+            camera={props.localCamera} onLeave={leaveRoom}
+            screen={screen}
+            newMessages={newMessages}
+            toggleScreen={toggleScreen}
+            requestPresentation={requestPresentation}
+            cancelPresentation={cancelPresentation}
+            onCameraStateChanged={cameraStateChanged}
+            onMicStateChanged={micStateChanged}
+          />
+
         </div>
 
-        <RoomActionsWidget presenter={isPresenter} owner={isOwner}
-          presentationRequested={presentationRequested} toggleSideBox={toggleSideBox}
-          camera={props.localCamera} onLeave={leaveRoom}
-          screen={screen}
-          newMessages={newMessages}
-          toggleScreen={toggleScreen}
-          requestPresentation={requestPresentation}
-          cancelPresentation={cancelPresentation}
-          onCameraStateChanged={cameraStateChanged}
-          onMicStateChanged={micStateChanged}
-        />
-
-      </div>
-
-    </ThemeProvider>
-
-
+      </ThemeProvider>)
+    </StyledEngineProvider>
   );
 };
 

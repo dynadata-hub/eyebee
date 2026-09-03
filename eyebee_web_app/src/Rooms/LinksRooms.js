@@ -1,16 +1,31 @@
 import React, { useEffect, useState, useRef, createRef } from "react";
 
 //import useChat from "../useChat";
-import { Close, PanTool, Send } from "@material-ui/icons";
-import { FormGroup, TextField, RadioGroup, FormControlLabel,Switch, Radio, SvgIcon, Button, IconButton, ThemeProvider, CssBaseline } from "@material-ui/core";
-import { makeStyles, createMuiTheme, useTheme } from '@material-ui/core/styles';
-import FileCopyIcon from '@material-ui/icons/FileCopy';
-import LinkIcon from '@material-ui/icons/Link';
+import { Close, PanTool, Send } from "@mui/icons-material";
+import {
+    FormGroup,
+    TextField,
+    RadioGroup,
+    FormControlLabel,
+    Switch,
+    Radio,
+    SvgIcon,
+    Button,
+    IconButton,
+    ThemeProvider,
+    StyledEngineProvider,
+    CssBaseline,
+    adaptV4Theme,
+} from "@mui/material";
+import { createTheme, useTheme } from '@mui/material/styles';
+import makeStyles from '@mui/styles/makeStyles';
+import FileCopyIcon from '@mui/icons-material/FileCopy';
+import LinkIcon from '@mui/icons-material/Link';
 import crypto from 'crypto-js';
-import Snackbar from '@material-ui/core/Snackbar';
-import Alert from '@material-ui/lab/Alert';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 
-const darkFormField = createMuiTheme({
+const darkFormField = createTheme(adaptV4Theme({
     palette: {
         background: {
             default: "#212121",
@@ -33,7 +48,7 @@ const darkFormField = createMuiTheme({
             disabledBackground: "#ffe082"
         }
     }
-});
+}));
 
 const useStyles = makeStyles(theme => ({
     mainBox: {
@@ -143,105 +158,117 @@ const LinksRooms = (props) => {
     };
 
     return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <div className={classes.newSubRoom} id="new-room">
+        <StyledEngineProvider injectFirst>
+            (<ThemeProvider theme={theme}>
+                <CssBaseline />
+                <div className={classes.newSubRoom} id="new-room">
 
-                <div className={classes.writeBox} style={{
-                    height:"4em"
-                }}>
-                    <ThemeProvider  theme={theme} >
-                        
+                    <div className={classes.writeBox} style={{
+                        height:"4em"
+                    }}>
+                        <StyledEngineProvider injectFirst>
+                            <ThemeProvider  theme={theme} >
+                                
 
-                        <FormGroup>
-                            <FormControlLabel
+                                <FormGroup>
+                                    <FormControlLabel
+                                    style={{
+                                        color:theme.palette.primary.contrastText
+                                    }}
+                                    
+                                    control={<Switch 
+                                    color="primary"
+                                        checked={smallRoom}
+                                        onChange={handleSwitchChange}
+                                        inputProps={{ 'aria-label': 'controlled' }}
+                                    >
+
+                                    </Switch>} label="Small room" />
+                               
+                                </FormGroup>
+                                
+                            </ThemeProvider>
+                        </StyledEngineProvider>
+
+                    </div>
+
+                    <div className={classes.writeBox}>
+                        <StyledEngineProvider injectFirst>
+                            <ThemeProvider theme={darkFormField} >
+                                <TextField style={{
+                                    flex: "2",
+                                    backgroundColor: darkFormField.palette.background.default
+                                }} label="Main user" value={mainUser} />
+                                <FileCopyIcon onClick={() => copy(mainUser)} style={{ color: "#767676" }}></FileCopyIcon>
+                                <LinkIcon onClick={() => openLink(mainUser)} style={{ color: "#767676" }}></LinkIcon>
+                            </ThemeProvider>
+                        </StyledEngineProvider>
+                    </div>
+
+                    <div className={classes.writeBox}>
+                        <StyledEngineProvider injectFirst>
+                            <ThemeProvider theme={darkFormField} >
+                                <TextField style={{
+                                    flex: "2",
+                                    backgroundColor: darkFormField.palette.background.default
+                                }} id="standard-basic" label="Presenters" value={presenter} />
+                                <FileCopyIcon onClick={() => copy(presenter)} style={{ color: "#767676" }}></FileCopyIcon>
+                                <LinkIcon onClick={() => openLink(presenter)} style={{ color: "#767676" }}></LinkIcon>
+                            </ThemeProvider>
+                        </StyledEngineProvider>
+                    </div>
+
+                    <div className={classes.writeBox}>
+                        <StyledEngineProvider injectFirst>
+                            <ThemeProvider theme={darkFormField} >
+                                <TextField style={{
+                                    flex: "2",
+                                    backgroundColor: darkFormField.palette.background.default
+                                }} id="standard-basic" label="Regular users" value={regularUser} />
+                                <FileCopyIcon onClick={() => copy(regularUser)} style={{ color: "#767676" }}></FileCopyIcon>
+                                <LinkIcon onClick={() => openLink(regularUser)} style={{ color: "#767676" }}></LinkIcon>
+                            </ThemeProvider>
+                        </StyledEngineProvider>
+                    </div>
+
+                    <div className={classes.writeBox}>
+                        <StyledEngineProvider injectFirst>
+                            <ThemeProvider theme={darkFormField} >
+                                <TextField style={{
+                                    flex: "2",
+                                    backgroundColor: darkFormField.palette.background.default
+                                }} id="standard-basic" label="Non SFU presenters" value={nonSFU} />
+                                <FileCopyIcon onClick={() => copy(nonSFU)} style={{ color: "#767676" }}></FileCopyIcon>
+                                <LinkIcon onClick={() => openLink(nonSFU)} style={{ color: "#767676" }}></LinkIcon>
+                            </ThemeProvider>
+                        </StyledEngineProvider>
+                    </div>
+
+                    <div className={classes.writeBox}>
+                        <Button color={"primary"}
                             style={{
-                                color:theme.palette.primary.contrastText
+                                flex: "1",
+                                border: "solid 2px #4e4d4d",
+                                color: "#4e4d4d",
+                                borderRadius: "5px",
+                                padding: "5px",
+                                maxWidth: "120px",
+                                margin: "10px"
                             }}
-                            
-                            control={<Switch 
-                            color="primary"
-                                checked={smallRoom}
-                                onChange={handleSwitchChange}
-                                inputProps={{ 'aria-label': 'controlled' }}
-                            >
-
-                            </Switch>} label="Small room" />
-                       
-                        </FormGroup>
-                        
-                    </ThemeProvider>
-
+                            onClick={props.toogleShowLinks}
+                        >
+                            Close
+                        </Button>
+                    </div>
+                    <Snackbar open={open} autoHideDuration={2000} onClose={handleClose}>
+                        <Alert onClose={handleClose} severity="info">
+                            Copy to clipboard
+                        </Alert>
+                    </Snackbar>
                 </div>
-
-                <div className={classes.writeBox}>
-                    <ThemeProvider theme={darkFormField} >
-                        <TextField style={{
-                            flex: "2",
-                            backgroundColor: darkFormField.palette.background.default
-                        }} label="Main user" value={mainUser} />
-                        <FileCopyIcon onClick={() => copy(mainUser)} style={{ color: "#767676" }}></FileCopyIcon>
-                        <LinkIcon onClick={() => openLink(mainUser)} style={{ color: "#767676" }}></LinkIcon>
-                    </ThemeProvider>
-                </div>
-
-                <div className={classes.writeBox}>
-                    <ThemeProvider theme={darkFormField} >
-                        <TextField style={{
-                            flex: "2",
-                            backgroundColor: darkFormField.palette.background.default
-                        }} id="standard-basic" label="Presenters" value={presenter} />
-                        <FileCopyIcon onClick={() => copy(presenter)} style={{ color: "#767676" }}></FileCopyIcon>
-                        <LinkIcon onClick={() => openLink(presenter)} style={{ color: "#767676" }}></LinkIcon>
-                    </ThemeProvider>
-                </div>
-
-                <div className={classes.writeBox}>
-                    <ThemeProvider theme={darkFormField} >
-                        <TextField style={{
-                            flex: "2",
-                            backgroundColor: darkFormField.palette.background.default
-                        }} id="standard-basic" label="Regular users" value={regularUser} />
-                        <FileCopyIcon onClick={() => copy(regularUser)} style={{ color: "#767676" }}></FileCopyIcon>
-                        <LinkIcon onClick={() => openLink(regularUser)} style={{ color: "#767676" }}></LinkIcon>
-                    </ThemeProvider>
-                </div>
-
-                <div className={classes.writeBox}>
-                    <ThemeProvider theme={darkFormField} >
-                        <TextField style={{
-                            flex: "2",
-                            backgroundColor: darkFormField.palette.background.default
-                        }} id="standard-basic" label="Non SFU presenters" value={nonSFU} />
-                        <FileCopyIcon onClick={() => copy(nonSFU)} style={{ color: "#767676" }}></FileCopyIcon>
-                        <LinkIcon onClick={() => openLink(nonSFU)} style={{ color: "#767676" }}></LinkIcon>
-                    </ThemeProvider>
-                </div>
-
-                <div className={classes.writeBox}>
-                    <Button color={"primary"}
-                        style={{
-                            flex: "1",
-                            border: "solid 2px #4e4d4d",
-                            color: "#4e4d4d",
-                            borderRadius: "5px",
-                            padding: "5px",
-                            maxWidth: "120px",
-                            margin: "10px"
-                        }}
-                        onClick={props.toogleShowLinks}
-                    >
-                        Close
-                    </Button>
-                </div>
-                <Snackbar open={open} autoHideDuration={2000} onClose={handleClose}>
-                    <Alert onClose={handleClose} severity="info">
-                        Copy to clipboard
-                    </Alert>
-                </Snackbar>
-            </div>
-        </ThemeProvider>
-    )
+            </ThemeProvider>)
+        </StyledEngineProvider>
+    );
 }
 
 export default LinksRooms;

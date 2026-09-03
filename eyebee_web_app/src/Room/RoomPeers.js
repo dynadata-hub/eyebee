@@ -1,11 +1,12 @@
 import React, { useState,useEffect,memo} from "react";
-import { makeStyles,ThemeProvider,useTheme,createMuiTheme } from '@material-ui/core/styles';
+import { ThemeProvider, StyledEngineProvider, useTheme, createTheme, adaptV4Theme } from '@mui/material/styles';
+import makeStyles from '@mui/styles/makeStyles';
 import HexagonalAvatarWidget from "../HexagonalAvatarWidget";
 import PeerListItem from "../PeerListItem";
-import {MoreVert, PanTool,VideocamOff,Videocam,Mic,MicOff} from "@material-ui/icons";
+import {MoreVert, PanTool,VideocamOff,Videocam,Mic,MicOff} from "@mui/icons-material";
 
 import "./RoomPeers.css";
-import { CssBaseline,IconButton,Menu,MenuItem } from "@material-ui/core";
+import { CssBaseline,IconButton,Menu,MenuItem } from "@mui/material";
 //optimizations for later
 import {FixedSizeList as List,areEqual} from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer";
@@ -13,7 +14,7 @@ import memoize from "memoize-one";
 
 
 
-const darkFormField = createMuiTheme({
+const darkFormField = createTheme(adaptV4Theme({
   palette:{
       background:{
           default: "#212121",
@@ -38,7 +39,7 @@ const darkFormField = createMuiTheme({
           hover: "#F29F39"
       }
   }
-});
+}));
 
 const useStyles = makeStyles(theme => ({
   mainBox:{
@@ -86,7 +87,7 @@ const useStyles = makeStyles(theme => ({
       [theme.breakpoints.up('md')]: {
           fontSize: "0.7em" 
       },
-      [theme.breakpoints.down('sm')]: {
+      [theme.breakpoints.down('md')]: {
           fontSize: "0.7em" 
       }
   }
@@ -100,81 +101,83 @@ const ListRow = memo(({data,index,style}) => {
   const item = items[index];
   
   return (
-      <div style={style}>
-        <div className={classes.listItem} >
-          <PeerListItem avatar={<HexagonalAvatarWidget background={item.presenter ? "primary" : "secondary"} />}  label={item.userName} >
-              <p>{item.mic}</p>
-              {
-                !item.presenter ?
-                (
-                  <IconButton color="secondary" 
+    <div style={style}>
+      <div className={classes.listItem} >
+        <PeerListItem avatar={<HexagonalAvatarWidget background={item.presenter ? "primary" : "secondary"} />}  label={item.userName} >
+            <p>{item.mic}</p>
+            {
+              !item.presenter ?
+              (
+                <IconButton
+                  color="secondary"
                   className={classes.actionBtn}
                   style={{...theme.actionBtn,
                     pointerEvents: !isOwner ? "none" : "initial",
                       backgroundColor:"transparent",
                       color: item.presentationRequested ?  theme.palette.primary.main : theme.palette.secondary.contrastText
-                  }} 
-                  
-                    onClick={e => handlePresentationRequest(e,item)}> 
-                      <PanTool style={theme.defaultIcon} />
-                  
-                  </IconButton>
-                )
-                :
-                (<div/>)
-              }
-
-
-
-              <IconButton 
-                color={
-                  item.camera ?
-                  "primary" : "secondary"} 
-                  className={classes.actionBtn}
-                  style={{...theme.actionBtn,
-                    pointerEvents: !isOwner ? "none" : "initial",
-                      backgroundColor:"transparent"
                   }}
-                >
-                {
-                    item.camera ?
-                    (
-                        <Videocam style={theme.defaultIcon} />
-                    )
-                    :
-                    (
-                        <VideocamOff style={theme.defaultIcon} />
-                    )
-                }
-              </IconButton>
+                  onClick={e => handlePresentationRequest(e,item)}
+                  size="large"> 
+                    <PanTool style={theme.defaultIcon} />
+                
+                </IconButton>
+              )
+              :
+              (<div/>)
+            }
 
+
+
+            <IconButton
+              color={
+                item.camera ?
+                "primary" : "secondary"}
+              className={classes.actionBtn}
+              style={{...theme.actionBtn,
+                pointerEvents: !isOwner ? "none" : "initial",
+                  backgroundColor:"transparent"
+              }}
+              size="large">
               {
-                  item.presenter ?
+                  item.camera ?
                   (
-                      <IconButton color={item.mic ? "primary" : "secondary"} 
-                      className={classes.actionBtn}
-                      
-                      > 
-                          {
-                              item.mic ?
-                              (
-                                  <Mic style={theme.defaultIcon} />
-                              )
-                              :
-                              (
-                                  <MicOff style={theme.defaultIcon} />
-                              )
-                          }
-                      
-                      </IconButton>
+                      <Videocam style={theme.defaultIcon} />
                   )
                   :
                   (
-                      <div/>
+                      <VideocamOff style={theme.defaultIcon} />
                   )
               }
-              
-              <IconButton color="secondary" 
+            </IconButton>
+
+            {
+                item.presenter ?
+                (
+                    <IconButton
+                      color={item.mic ? "primary" : "secondary"}
+                      className={classes.actionBtn}
+                      size="large"> 
+                        {
+                            item.mic ?
+                            (
+                                <Mic style={theme.defaultIcon} />
+                            )
+                            :
+                            (
+                                <MicOff style={theme.defaultIcon} />
+                            )
+                        }
+                    
+                    </IconButton>
+                )
+                :
+                (
+                    <div/>
+                )
+            }
+            
+            <IconButton
+              color="secondary"
               className={classes.actionBtn}
               style={{...theme.actionBtn,
                   fontSize:"0.8em",
@@ -182,17 +185,16 @@ const ListRow = memo(({data,index,style}) => {
                   visibility: isOwner && userId === item.id ? "hidden" : "visible",
                   backgroundColor:"transparent",
                   color: theme.palette.secondary.contrastText
-              }} 
-              
-                onClick={e => toggleMenu(e,item)}> 
-                  <MoreVert style={theme.defaultIcon} />
-              
-              </IconButton>
-          </PeerListItem>
-        </div>
+              }}
+              onClick={e => toggleMenu(e,item)}
+              size="large"> 
+                <MoreVert style={theme.defaultIcon} />
+            
+            </IconButton>
+        </PeerListItem>
       </div>
-    
-  )
+    </div>
+  );
 },areEqual);
 
 
@@ -364,123 +366,168 @@ const RoomPeers = (props) => {
   const presenterListData = createItemData(presenters,props.owner,props.userId,toggleMenu);
   const spectatorListData = createItemData(spectators,props.owner,props.userId,toggleSpectatorMenu,togglePresReqMenu);
   return (
-    <ThemeProvider theme={theme} >
-      <CssBaseline/>
-      <div className={classes.mainBox}>
-        <div className={classes.listItemBox}>
-            <div className={classes.listItem}>
-              
-              <PeerListItem avatar={<HexagonalAvatarWidget background="primary" />}  label={moderator ? moderator.userName+" (Moderator)":"(Moderator)"} >
-              </PeerListItem>
-              
-            </div>
-        </div>
-        
-
-        <div className={classes.separator}>
-          <p>Presenters</p>
-        </div>
-        <div className={classes.list}>
-
-          {
-            presenters && presenters.length === 0 ? 
-            (
-              <div className="room-peers-item">
-                  <p className="room-peers-name">No Presenters</p>
-                </div>  
-            )
-            :
-            (
-              <div/>
-            )
-          }
-
-          {
-            presenters && presenters.length > 0 ? 
-            (
-              <div style={{
-                width:"100%",
-                flex:"2"
-              }}>
-                <AutoSizer>
-                  {
-                    ({height, width}) => (
-                      <List height={height}
-                      itemCount={presenters.length}
-                      itemData={presenterListData}
-                      itemSize={70}
-                      width={width}>
-                          {ListRow}
-                      </List>
-                    )
-                  }
-                </AutoSizer>
+    <StyledEngineProvider injectFirst>
+      (<ThemeProvider theme={theme} >
+        <CssBaseline/>
+        <div className={classes.mainBox}>
+          <div className={classes.listItemBox}>
+              <div className={classes.listItem}>
+                
+                <PeerListItem avatar={<HexagonalAvatarWidget background="primary" />}  label={moderator ? moderator.userName+" (Moderator)":"(Moderator)"} >
+                </PeerListItem>
+                
               </div>
-            )
-            :
-            (
-              <div/>
-            )
-          }
-
-
-
-        </div>
-
+          </div>
           
-        {/* <div className={classes.list}>
 
-          {
-            peers && peers.length === 0 ? 
-            (
-              <div className="room-peers-item">
-                  <p className="room-peers-name">No Presenters</p>
-                </div>  
-            )
-            :
-            (
-              <div/>
-            )
-          }
-          
-          {
-            peers && peers.length > 0 && peers.filter(p => {
-              return p.presenter;
-            }).map( peer => {
-              return (
-                <div key={peer.id} className={classes.listItem}>
-                  <PeerListItem avatar={<HexagonalAvatarWidget background="primary" />}  label={peer.userName} >
-                      <IconButton color="secondary" 
-                      className={classes.actionBtn}
-                      style={{...theme.actionBtn,
-                          fontSize:"0.8em",
-                          display: !props.owner ? "none":"initial",
-                          backgroundColor:"transparent",
-                          color: theme.palette.secondary.contrastText
-                      }} 
-                      
-                        onClick={e => toggleMenu(e,peer)}> 
-                          <MoreVert style={theme.defaultIcon} />
-                      
-                      </IconButton>
-                  </PeerListItem>
-                </div>
+          <div className={classes.separator}>
+            <p>Presenters</p>
+          </div>
+          <div className={classes.list}>
 
-
-                // <div key={peer.id} className="room-peers-item">
-                //   <p className="room-peers-name">{peer.userName} {peer.owner ? "(Moderador)" : ""}</p>
-                // </div>
-              )
-            })
-          }
-
-        </div> */}
-        <div className={classes.separator}>
-          <p>Participants</p>
-        </div>
-        <div className={classes.list}>
             {
-            spectators && spectators.length === 0 ? 
+              presenters && presenters.length === 0 ? 
+              (
+                <div className="room-peers-item">
+                    <p className="room-peers-name">No Presenters</p>
+                  </div>  
+              )
+              :
+              (
+                <div/>
+              )
+            }
+
+            {
+              presenters && presenters.length > 0 ? 
+              (
+                <div style={{
+                  width:"100%",
+                  flex:"2"
+                }}>
+                  <AutoSizer>
+                    {
+                      ({height, width}) => (
+                        <List height={height}
+                        itemCount={presenters.length}
+                        itemData={presenterListData}
+                        itemSize={70}
+                        width={width}>
+                            {ListRow}
+                        </List>
+                      )
+                    }
+                  </AutoSizer>
+                </div>
+              )
+              :
+              (
+                <div/>
+              )
+            }
+
+
+
+          </div>
+
+            
+          {/* <div className={classes.list}>
+
+            {
+              peers && peers.length === 0 ? 
+              (
+                <div className="room-peers-item">
+                    <p className="room-peers-name">No Presenters</p>
+                  </div>  
+              )
+              :
+              (
+                <div/>
+              )
+            }
+            
+            {
+              peers && peers.length > 0 && peers.filter(p => {
+                return p.presenter;
+              }).map( peer => {
+                return (
+                  <div key={peer.id} className={classes.listItem}>
+                    <PeerListItem avatar={<HexagonalAvatarWidget background="primary" />}  label={peer.userName} >
+                        <IconButton color="secondary" 
+                        className={classes.actionBtn}
+                        style={{...theme.actionBtn,
+                            fontSize:"0.8em",
+                            display: !props.owner ? "none":"initial",
+                            backgroundColor:"transparent",
+                            color: theme.palette.secondary.contrastText
+                        }} 
+                        
+                          onClick={e => toggleMenu(e,peer)}> 
+                            <MoreVert style={theme.defaultIcon} />
+                        
+                        </IconButton>
+                    </PeerListItem>
+                  </div>
+
+
+                  // <div key={peer.id} className="room-peers-item">
+                  //   <p className="room-peers-name">{peer.userName} {peer.owner ? "(Moderador)" : ""}</p>
+                  // </div>
+                )
+              })
+            }
+
+          </div> */}
+          <div className={classes.separator}>
+            <p>Participants</p>
+          </div>
+          <div className={classes.list}>
+              {
+              spectators && spectators.length === 0 ? 
+                (
+                  <div className="room-peers-item">
+                    <p className="room-peers-name">No Participants</p>
+                  </div>  
+                )
+                :
+                (
+                  <div/>
+                )
+              }
+
+              {
+                  spectators && spectators.length > 0 ? 
+                  (
+                  <div style={{
+                  width:"100%",
+                  flex:"2"
+                  }}>
+                    <AutoSizer>
+                      {
+                        ({height, width}) => (
+                          <List height={height}
+                          itemCount={spectators.length}
+                          itemData={spectatorListData}
+                          itemSize={70}
+                          width={width}>
+                              {ListRow}
+                          </List>
+                        )
+                      }
+                    </AutoSizer>
+                  </div>  
+                )
+                :
+                (
+                  <div/>
+                )
+              }
+
+          </div>
+          {/* <div className={classes.list}>
+
+            {
+              peers && peers.length === 0 ? 
               (
                 <div className="room-peers-item">
                   <p className="room-peers-name">No Participants</p>
@@ -493,158 +540,116 @@ const RoomPeers = (props) => {
             }
 
             {
-                spectators && spectators.length > 0 ? 
-                (
-                <div style={{
-                width:"100%",
-                flex:"2"
-                }}>
-                  <AutoSizer>
-                    {
-                      ({height, width}) => (
-                        <List height={height}
-                        itemCount={spectators.length}
-                        itemData={spectatorListData}
-                        itemSize={70}
-                        width={width}>
-                            {ListRow}
-                        </List>
-                      )
-                    }
-                  </AutoSizer>
-                </div>  
-              )
-              :
-              (
-                <div/>
-              )
-            }
+              peers && peers.length > 0 && peers.filter(p => {
+                return !p.owner && !p.presenter;
+              }).map( peer => {
+                return (
+                  <div key={peer.id} className={classes.listItem}>
+                    <PeerListItem avatar={<HexagonalAvatarWidget background="secondary" />}  label={peer.userName} >
 
-        </div>
-        {/* <div className={classes.list}>
-
-          {
-            peers && peers.length === 0 ? 
-            (
-              <div className="room-peers-item">
-                <p className="room-peers-name">No Participants</p>
-              </div>  
-            )
-            :
-            (
-              <div/>
-            )
-          }
-
-          {
-            peers && peers.length > 0 && peers.filter(p => {
-              return !p.owner && !p.presenter;
-            }).map( peer => {
-              return (
-                <div key={peer.id} className={classes.listItem}>
-                  <PeerListItem avatar={<HexagonalAvatarWidget background="secondary" />}  label={peer.userName} >
-
-                    
-                    <IconButton disabled={!props.owner && peer.id !== props.userId} color="secondary" 
-                    className={classes.actionBtn}
-                    style={{...theme.actionBtn,
-                        backgroundColor:"transparent",
-                        color: peer.presentationRequested ?  theme.palette.primary.main : theme.palette.secondary.contrastText
-                    }} 
-                    
-                      onClick={handlePresentationRequest}> 
-                        <PanTool style={theme.defaultIcon} />
-                    
-                    </IconButton>
-
-
-                    <IconButton disabled={!props.owner} 
-                    color={
-                          peer.camera ?
-                      "primary" : "secondary"} 
-                      className={classes.actionBtn}
-
-                     >
-                      {
-                          peer.camera ?
-                          (
-                              <Videocam style={theme.defaultIcon} />
-                          )
-                          :
-                          (
-                              <VideocamOff style={theme.defaultIcon} />
-                          )
-                      }
-                        
-                    </IconButton>
-
-                    <IconButton color="secondary" 
+                      
+                      <IconButton disabled={!props.owner && peer.id !== props.userId} color="secondary" 
                       className={classes.actionBtn}
                       style={{...theme.actionBtn,
-                          fontSize:"0.8em",
-                          display: !props.owner ? "none":"initial",
                           backgroundColor:"transparent",
-                          color: theme.palette.secondary.contrastText
+                          color: peer.presentationRequested ?  theme.palette.primary.main : theme.palette.secondary.contrastText
                       }} 
                       
-                        onClick={e => toggleSpectatorMenu(e,peer)}> 
-                          <MoreVert style={theme.defaultIcon} />
+                        onClick={handlePresentationRequest}> 
+                          <PanTool style={theme.defaultIcon} />
                       
-                    </IconButton>
-                  </PeerListItem>
-                </div>
-              )
-            })
-          }
-
-        </div> */}
-        <ThemeProvider theme={darkFormField} >
-          <Menu
-            color="primary"
-            id="simple-menu"
-            anchorEl={anchorEl}
-            keepMounted
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
-          >
-            <MenuItem onClick={removePresentation}>Remove Presentation</MenuItem>
-            <MenuItem onClick={mutePeer}>Mute</MenuItem>
-            <MenuItem onClick={sendMessage}>Send Message</MenuItem>
-          </Menu>
+                      </IconButton>
 
 
-          <Menu
-            color="primary"
-            id="simple-menu"
-            anchorEl={spectatorAnchorEl}
-            keepMounted
-            open={Boolean(spectatorAnchorEl)}
-            onClose={handleClose}
-          >
-            <MenuItem onClick={assignAsPresenter}>Assign as presenter</MenuItem>
-            <MenuItem onClick={expel}>Expel</MenuItem>
-            <MenuItem onClick={sendMessage}>Send Message</MenuItem>
-          </Menu>
+                      <IconButton disabled={!props.owner} 
+                      color={
+                            peer.camera ?
+                        "primary" : "secondary"} 
+                        className={classes.actionBtn}
+
+                       >
+                        {
+                            peer.camera ?
+                            (
+                                <Videocam style={theme.defaultIcon} />
+                            )
+                            :
+                            (
+                                <VideocamOff style={theme.defaultIcon} />
+                            )
+                        }
+                          
+                      </IconButton>
+
+                      <IconButton color="secondary" 
+                        className={classes.actionBtn}
+                        style={{...theme.actionBtn,
+                            fontSize:"0.8em",
+                            display: !props.owner ? "none":"initial",
+                            backgroundColor:"transparent",
+                            color: theme.palette.secondary.contrastText
+                        }} 
+                        
+                          onClick={e => toggleSpectatorMenu(e,peer)}> 
+                            <MoreVert style={theme.defaultIcon} />
+                        
+                      </IconButton>
+                    </PeerListItem>
+                  </div>
+                )
+              })
+            }
+
+          </div> */}
+          <StyledEngineProvider injectFirst>
+            <ThemeProvider theme={darkFormField} >
+              <Menu
+                color="primary"
+                id="simple-menu"
+                anchorEl={anchorEl}
+                keepMounted
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+              >
+                <MenuItem onClick={removePresentation}>Remove Presentation</MenuItem>
+                <MenuItem onClick={mutePeer}>Mute</MenuItem>
+                <MenuItem onClick={sendMessage}>Send Message</MenuItem>
+              </Menu>
 
 
-          <Menu
-            color="primary"
-            id="simple-menu"
-            anchorEl={presReqAnchorEl}
-            keepMounted
-            open={Boolean(presReqAnchorEl)}
-            onClose={handleClose}
-          >
-            <MenuItem onClick={acceptAsPresenter}>Accept</MenuItem>
-            <MenuItem onClick={rejectAsPresenter}>Reject</MenuItem>
-          </Menu>
+              <Menu
+                color="primary"
+                id="simple-menu"
+                anchorEl={spectatorAnchorEl}
+                keepMounted
+                open={Boolean(spectatorAnchorEl)}
+                onClose={handleClose}
+              >
+                <MenuItem onClick={assignAsPresenter}>Assign as presenter</MenuItem>
+                <MenuItem onClick={expel}>Expel</MenuItem>
+                <MenuItem onClick={sendMessage}>Send Message</MenuItem>
+              </Menu>
 
-        </ThemeProvider>
-        
 
-      </div>
-    </ThemeProvider>
+              <Menu
+                color="primary"
+                id="simple-menu"
+                anchorEl={presReqAnchorEl}
+                keepMounted
+                open={Boolean(presReqAnchorEl)}
+                onClose={handleClose}
+              >
+                <MenuItem onClick={acceptAsPresenter}>Accept</MenuItem>
+                <MenuItem onClick={rejectAsPresenter}>Reject</MenuItem>
+              </Menu>
 
+            </ThemeProvider>
+          </StyledEngineProvider>
+          
+
+        </div>
+      </ThemeProvider>)
+    </StyledEngineProvider>
   );
 };
 

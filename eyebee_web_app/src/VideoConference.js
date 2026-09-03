@@ -5,7 +5,7 @@ import RoomAPI from "./Room/RoomAPI";
 import UserAPI from "./UserAPI";
 import MobileDeviceDetector from "./MobileDeviceDetector";
 
-//import {} from "@material-ui/core";
+//import {} from "@mui/material";
 
 import queryString from "query-string";
 
@@ -17,11 +17,12 @@ import RoomManager from "./Room/RoomManager";
 
 import JoinRoomView from "./JoinRoomView";
 import Room from "./Room/Room";
-import { makeStyles, createTheme, ThemeProvider } from '@material-ui/core/styles';
+import { createTheme, ThemeProvider, StyledEngineProvider, adaptV4Theme } from '@mui/material/styles';
+import makeStyles from '@mui/styles/makeStyles';
 import TestStreamWidget from "./TestStreamWidget";
 import crypto from 'crypto-js';
 
-const theme = createTheme({
+const theme = createTheme(adaptV4Theme({
     palette: {
         background: {
             default: "#000",
@@ -52,7 +53,7 @@ const theme = createTheme({
     typography: {
         fontSize: "0.9em"
     }
-});
+}));
 
 
 const useStyles = makeStyles(theme => ({
@@ -311,40 +312,41 @@ const VideoConference = props => {
     }
 
     return (
-        <ThemeProvider theme={theme}>
+        <StyledEngineProvider injectFirst>
+            (<ThemeProvider theme={theme}>
 
-            <div className={classes.mainBox}>
-                <p style={{
-                    color:"white"
-                }}>{textOnly}</p>
-                <TestStreamWidget source={userData.testStream} textOnly={textOnly} text={userData.userName} onCanvasElement={canvasCreated} />
+                <div className={classes.mainBox}>
+                    <p style={{
+                        color:"white"
+                    }}>{textOnly}</p>
+                    <TestStreamWidget source={userData.testStream} textOnly={textOnly} text={userData.userName} onCanvasElement={canvasCreated} />
 
-                {currentSection === "joinRoom" ?
-                    (
-                        <JoinRoomView showPeerTestStats={showPeerTestStats} testCanvasEl={canvasEl} testDisabled={testDisabled} roomManager={roomManager} userData={userData} joinRoom={joinRoom} onCamera={setupCamera} />
+                    {currentSection === "joinRoom" ?
+                        (
+                            <JoinRoomView showPeerTestStats={showPeerTestStats} testCanvasEl={canvasEl} testDisabled={testDisabled} roomManager={roomManager} userData={userData} joinRoom={joinRoom} onCamera={setupCamera} />
 
-                    )
-                    :
-                    (<div />)
+                        )
+                        :
+                        (<div />)
 
-                }
+                    }
 
-                {currentSection === "room" ?
-                    (
-                        <Room userData={userData} roomManager={roomManager}
-                            wsSocket={wsSocket} localCamera={camera} />
-                    )
-                    :
-                    (<div />)
+                    {currentSection === "room" ?
+                        (
+                            <Room userData={userData} roomManager={roomManager}
+                                wsSocket={wsSocket} localCamera={camera} />
+                        )
+                        :
+                        (<div />)
 
-                }
+                    }
 
 
-            </div>
+                </div>
 
-        </ThemeProvider>
-
-    )
+            </ThemeProvider>)
+        </StyledEngineProvider>
+    );
 
 }
 

@@ -1,10 +1,10 @@
 import React from "react";
 
-import {createTheme } from '@material-ui/core/styles';
-import {grey,red } from '@material-ui/core/colors';
+import { createTheme, adaptV4Theme } from '@mui/material/styles';
+import {grey,red } from '@mui/material/colors';
 
 
-const darkFormField = createTheme({
+const darkFormField = createTheme(adaptV4Theme({
     palette: {
         background: {
             default: "#101010",
@@ -29,6 +29,6 @@ const darkFormField = createTheme({
             disabledBackground: "#ffe082"
         }
     }
-});
+}));
 
 export default darkFormField;

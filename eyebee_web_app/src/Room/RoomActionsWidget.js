@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 
-import { Button, useMediaQuery, SvgIcon, Badge, Tooltip } from "@material-ui/core";
-import { Mic, MicOff, Videocam, VideocamOff, Chat, CallEnd, PanTool, PeopleAlt } from "@material-ui/icons";
-import { makeStyles, ThemeProvider, useTheme } from '@material-ui/core/styles';
+import { Button, useMediaQuery, SvgIcon, Badge, Tooltip } from "@mui/material";
+import { Mic, MicOff, Videocam, VideocamOff, Chat, CallEnd, PanTool, PeopleAlt } from "@mui/icons-material";
+import { ThemeProvider, StyledEngineProvider, useTheme } from '@mui/material/styles';
+import makeStyles from '@mui/styles/makeStyles';
 import ShareScreenIcon from "../img/share-screen.png";
 
 import { ReactComponent as SubRoomSVG } from '../img/subroom-icon.svg';
@@ -22,7 +23,7 @@ const useStyles = makeStyles(theme => ({
         justifyContent: "center",
         flex: "2",
         flexWrap: "wrap",
-        [theme.breakpoints.down('xs')]: {
+        [theme.breakpoints.down('sm')]: {
             flexDirection: "column",
         }
     },
@@ -34,7 +35,7 @@ const useStyles = makeStyles(theme => ({
         [theme.breakpoints.up('md')]: {
             fontSize: "1em"
         },
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             fontSize: "0.7em"
         }
     },
@@ -49,7 +50,7 @@ const useStyles = makeStyles(theme => ({
         // padding: theme.breakpoints.between('md', 'lg') ? "0.8em 0" : "0.5em 0"  ,
         textTransform: "none",
         backgroundColor: "#D73939",
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             fontSize: "0.7em"
         },
         [theme.breakpoints.up('md')]: {
@@ -61,7 +62,7 @@ const useStyles = makeStyles(theme => ({
 
     actionBoxLeftGap: {
         flex: "2",
-        [theme.breakpoints.down('sm')]: {
+        [theme.breakpoints.down('md')]: {
             display: "none"
         }
     },
@@ -77,7 +78,7 @@ const useStyles = makeStyles(theme => ({
             display: "none"
         },
 
-        [theme.breakpoints.down('xs')]: {
+        [theme.breakpoints.down('sm')]: {
             display: "flex",
             justifyContent: "center"
         }
@@ -121,7 +122,7 @@ const RoomActionsWidget = props => {
     const [handRaised, setHandRaised] = useState(false);
     const [showScreen, setShowScreen] = useState(props.presenter);
 
-    const xsScreen = useMediaQuery(theme.breakpoints.down("xs"));
+    const xsScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const smScreen = useMediaQuery(theme.breakpoints.up("sm"));
 
     useEffect(() => {
@@ -275,28 +276,60 @@ const RoomActionsWidget = props => {
     }
 
     return (
+        <StyledEngineProvider injectFirst>
+            (<ThemeProvider theme={theme} >
+                <div className={classes.mainBox}>
+                    <div className={classes.roomActionsBox}>
+                        <div className={classes.upperBtnBox}>
+                            <div style={{
 
-        <ThemeProvider theme={theme} >
-            <div className={classes.mainBox}>
-                <div className={classes.roomActionsBox}>
-                    <div className={classes.upperBtnBox}>
-                        <div style={{
+                                flex: smScreen ? "2" : "1",
+                            }}>
+                                {
+                                    showHand ?
+                                        (
+                                            <Tooltip title="Raise your hand">
+                                                <Button color="secondary"
+                                                    className={classes.actionBtn}
+                                                    style={{
+                                                        ...theme.actionBtn,
+                                                        color: handRaised ? "#4FC16F" : "white"
+                                                    }}
 
-                            flex: smScreen ? "2" : "1",
-                        }}>
+                                                    onClick={togglePresentation}>
+                                                    <PanTool style={theme.defaultIcon} />
+
+                                                </Button>
+                                            </Tooltip>
+                                        )
+                                        :
+                                        (
+                                            <div />
+                                        )
+                                }
+                            </div>
+
+
                             {
-                                showHand ?
+                                showScreen ?
                                     (
-                                        <Tooltip title="Raise your hand">
-                                            <Button color="secondary"
+                                        <Tooltip title="Share screen">
+                                            <Button color={props.screen && props.screen.isVideoEnabled() ? "primary" : "secondary"}
                                                 className={classes.actionBtn}
-                                                style={{
-                                                    ...theme.actionBtn,
-                                                    color: handRaised ? "#4FC16F" : "white"
-                                                }}
-
-                                                onClick={togglePresentation}>
-                                                <PanTool style={theme.defaultIcon} />
+                                                style={theme.actionBtn}
+                                                onClick={toggleScreen}>
+                                                {
+                                                    streamsStatus.screen ?
+                                                        (
+                                                            <ScreenShareIcon style={{ ...theme.defaultIcon }} color="primary" />
+                                                            // <StopScreenShare style={theme.defaultIcon} />
+                                                        )
+                                                        :
+                                                        (
+                                                            <ScreenShareIcon style={{ ...theme.defaultIcon }} color="secondary" />
+                                                            // <ScreenShare style={theme.defaultIcon} />
+                                                        )
+                                                }
 
                                             </Button>
                                         </Tooltip>
@@ -306,157 +339,79 @@ const RoomActionsWidget = props => {
                                         <div />
                                     )
                             }
-                        </div>
-
-
-                        {
-                            showScreen ?
-                                (
-                                    <Tooltip title="Share screen">
-                                        <Button color={props.screen && props.screen.isVideoEnabled() ? "primary" : "secondary"}
-                                            className={classes.actionBtn}
-                                            style={theme.actionBtn}
-                                            onClick={toggleScreen}>
-                                            {
-                                                streamsStatus.screen ?
-                                                    (
-                                                        <ScreenShareIcon style={{ ...theme.defaultIcon }} color="primary" />
-                                                        // <StopScreenShare style={theme.defaultIcon} />
-                                                    )
-                                                    :
-                                                    (
-                                                        <ScreenShareIcon style={{ ...theme.defaultIcon }} color="secondary" />
-                                                        // <ScreenShare style={theme.defaultIcon} />
-                                                    )
-                                            }
-
-                                        </Button>
-                                    </Tooltip>
-                                )
-                                :
-                                (
-                                    <div />
-                                )
-                        }
-                        <Tooltip title={streamsStatus.camera ? "Disable camera" : "Enable camera"}>
-                            <Button color={camera && camera.isVideoEnabled() ? "primary" : "secondary"}
-                                className={classes.actionBtn}
-
-                                style={{
-                                    ...theme.actionBtn,
-                                    color: "white",
-                                    backgroundColor: streamsStatus.camera ? "#4FC16F" : theme.actionBtn.backgroundColor
-                                }}
-
-                                onClick={toggleCamera}>
-                                {
-                                    streamsStatus.camera ?
-                                        (
-                                            <Videocam style={theme.defaultIcon} />
-                                        )
-                                        :
-                                        (
-                                            <VideocamOff style={theme.defaultIcon} />
-                                        )
-                                }
-
-                            </Button>
-                        </Tooltip>
-                        {
-                            showMic ?
-                                (
-                                    <Tooltip title={streamsStatus.mic ? "Disable microphone" : "Enable microphone"}>
-                                        <Button color={camera && camera.isAudioEnabled() ? "primary" : "secondary"}
-                                            className={classes.actionBtn}
-                                            style={{
-                                                ...theme.actionBtn,
-                                                color: "white",
-                                                backgroundColor: streamsStatus.mic ? "#4FC16F" : theme.actionBtn.backgroundColor
-                                            }}
-
-                                            onClick={toggleMic}>
-                                            {
-                                                streamsStatus.mic ?
-                                                    (
-                                                        <Mic style={theme.defaultIcon} />
-                                                    )
-                                                    :
-                                                    (
-                                                        <MicOff style={theme.defaultIcon} />
-                                                    )
-                                            }
-
-                                        </Button>
-                                    </Tooltip>
-                                )
-                                :
-                                (
-                                    <div />
-                                )
-                        }
-
-                        {
-                            smScreen ?
-                                (
-                                    <Tooltip title="Exit">
-                                        <Button variant="contained" color="primary" className={`${classes.leaveBtn} ${classes.actionBtn}`} onClick={props.onLeave}>
-                                            <CallEnd style={theme.defaultIcon} />
-                                        </Button>
-                                    </Tooltip>
-                                )
-                                :
-                                (
-                                    <div />
-                                )
-                        }
-
-                        {!smScreen &&
-                            <Tooltip title="Show users">
-                                <Button color="secondary"
+                            <Tooltip title={streamsStatus.camera ? "Disable camera" : "Enable camera"}>
+                                <Button color={camera && camera.isVideoEnabled() ? "primary" : "secondary"}
                                     className={classes.actionBtn}
+
                                     style={{
                                         ...theme.actionBtn,
                                         color: "white",
-                                        //backgroundColor: sideBoxOpened ?  "#4FC16F" : theme.actionBtn.backgroundColor
+                                        backgroundColor: streamsStatus.camera ? "#4FC16F" : theme.actionBtn.backgroundColor
                                     }}
 
-                                    onClick={() => toggleSideBox("participants")}>
-                                    <PeopleAlt style={theme.defaultIcon} />
+                                    onClick={toggleCamera}>
+                                    {
+                                        streamsStatus.camera ?
+                                            (
+                                                <Videocam style={theme.defaultIcon} />
+                                            )
+                                            :
+                                            (
+                                                <VideocamOff style={theme.defaultIcon} />
+                                            )
+                                    }
 
                                 </Button>
                             </Tooltip>
-                        }
+                            {
+                                showMic ?
+                                    (
+                                        <Tooltip title={streamsStatus.mic ? "Disable microphone" : "Enable microphone"}>
+                                            <Button color={camera && camera.isAudioEnabled() ? "primary" : "secondary"}
+                                                className={classes.actionBtn}
+                                                style={{
+                                                    ...theme.actionBtn,
+                                                    color: "white",
+                                                    backgroundColor: streamsStatus.mic ? "#4FC16F" : theme.actionBtn.backgroundColor
+                                                }}
 
-                        {!smScreen &&
-                            <Tooltip title="Show chat">
-                                <Button color="secondary"
-                                    className={classes.actionBtn}
-                                    style={{
-                                        ...theme.actionBtn,
-                                        color: "white",
-                                        //backgroundColor: sideBoxOpened ?  "#4FC16F" : theme.actionBtn.backgroundColor
-                                    }}
+                                                onClick={toggleMic}>
+                                                {
+                                                    streamsStatus.mic ?
+                                                        (
+                                                            <Mic style={theme.defaultIcon} />
+                                                        )
+                                                        :
+                                                        (
+                                                            <MicOff style={theme.defaultIcon} />
+                                                        )
+                                                }
 
-                                    onClick={e => toggleSideBox("chat")}>
-                                    <Badge invisible={!props.newMessages} color="primary" variant="dot">
-                                        <Chat style={theme.defaultIcon} />
-                                    </Badge>
-                                </Button>
-                            </Tooltip>}
+                                            </Button>
+                                        </Tooltip>
+                                    )
+                                    :
+                                    (
+                                        <div />
+                                    )
+                            }
 
-                        {!smScreen &&
-                            <Tooltip title="Exit">
-                                <Button variant="contained" color="primary" className={`${classes.leaveBtn} ${classes.actionBtn}`} onClick={props.onLeave}>
-                                    <CallEnd style={theme.defaultIcon} />
-                                </Button>
-                            </Tooltip>}
+                            {
+                                smScreen ?
+                                    (
+                                        <Tooltip title="Exit">
+                                            <Button variant="contained" color="primary" className={`${classes.leaveBtn} ${classes.actionBtn}`} onClick={props.onLeave}>
+                                                <CallEnd style={theme.defaultIcon} />
+                                            </Button>
+                                        </Tooltip>
+                                    )
+                                    :
+                                    (
+                                        <div />
+                                    )
+                            }
 
-                        {smScreen &&
-                            <div style={{
-                                display: "flex",
-                                flex: smScreen ? "2" : "1",
-                                justifyContent: "flex-end"
-                            }}>
+                            {!smScreen &&
                                 <Tooltip title="Show users">
                                     <Button color="secondary"
                                         className={classes.actionBtn}
@@ -466,12 +421,14 @@ const RoomActionsWidget = props => {
                                             //backgroundColor: sideBoxOpened ?  "#4FC16F" : theme.actionBtn.backgroundColor
                                         }}
 
-                                        onClick={e => toggleSideBox("participants")}>
+                                        onClick={() => toggleSideBox("participants")}>
                                         <PeopleAlt style={theme.defaultIcon} />
 
                                     </Button>
                                 </Tooltip>
+                            }
 
+                            {!smScreen &&
                                 <Tooltip title="Show chat">
                                     <Button color="secondary"
                                         className={classes.actionBtn}
@@ -486,33 +443,77 @@ const RoomActionsWidget = props => {
                                             <Chat style={theme.defaultIcon} />
                                         </Badge>
                                     </Button>
-                                </Tooltip>
+                                </Tooltip>}
 
-                                {/* {
-                                !smScreen ?
-                                    (
-                                        <Tooltip title="Exit">
-                                            <Button variant="contained" color="primary" className={`${classes.leaveBtn} ${classes.actionBtn}`} onClick={props.onLeave}>
-                                                <CallEnd style={theme.defaultIcon} />
-                                            </Button>
-                                        </Tooltip>
-                                    )
-                                    :
-                                    (
-                                        <div />
-                                    )
-                            } */}
+                            {!smScreen &&
+                                <Tooltip title="Exit">
+                                    <Button variant="contained" color="primary" className={`${classes.leaveBtn} ${classes.actionBtn}`} onClick={props.onLeave}>
+                                        <CallEnd style={theme.defaultIcon} />
+                                    </Button>
+                                </Tooltip>}
 
-                            </div>
-                        }
+                            {smScreen &&
+                                <div style={{
+                                    display: "flex",
+                                    flex: smScreen ? "2" : "1",
+                                    justifyContent: "flex-end"
+                                }}>
+                                    <Tooltip title="Show users">
+                                        <Button color="secondary"
+                                            className={classes.actionBtn}
+                                            style={{
+                                                ...theme.actionBtn,
+                                                color: "white",
+                                                //backgroundColor: sideBoxOpened ?  "#4FC16F" : theme.actionBtn.backgroundColor
+                                            }}
+
+                                            onClick={e => toggleSideBox("participants")}>
+                                            <PeopleAlt style={theme.defaultIcon} />
+
+                                        </Button>
+                                    </Tooltip>
+
+                                    <Tooltip title="Show chat">
+                                        <Button color="secondary"
+                                            className={classes.actionBtn}
+                                            style={{
+                                                ...theme.actionBtn,
+                                                color: "white",
+                                                //backgroundColor: sideBoxOpened ?  "#4FC16F" : theme.actionBtn.backgroundColor
+                                            }}
+
+                                            onClick={e => toggleSideBox("chat")}>
+                                            <Badge invisible={!props.newMessages} color="primary" variant="dot">
+                                                <Chat style={theme.defaultIcon} />
+                                            </Badge>
+                                        </Button>
+                                    </Tooltip>
+
+                                    {/* {
+                                    !smScreen ?
+                                        (
+                                            <Tooltip title="Exit">
+                                                <Button variant="contained" color="primary" className={`${classes.leaveBtn} ${classes.actionBtn}`} onClick={props.onLeave}>
+                                                    <CallEnd style={theme.defaultIcon} />
+                                                </Button>
+                                            </Tooltip>
+                                        )
+                                        :
+                                        (
+                                            <div />
+                                        )
+                                } */}
+
+                                </div>
+                            }
+
+                        </div>
 
                     </div>
-
-                </div>
-            </div >
-        </ThemeProvider >
-
-    )
+                </div >
+            </ThemeProvider >)
+        </StyledEngineProvider>
+    );
 
 }
 

@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { makeStyles, createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
+import { createTheme, ThemeProvider, StyledEngineProvider, adaptV4Theme } from '@mui/material/styles';
+import makeStyles from '@mui/styles/makeStyles';
 import logoEyeBee from "../img/logo_eyebee_fondo_negrov2.jpg";
-import ImageIcon from '@material-ui/icons/Image';
-import { Input, Button, CssBaseline, InputAdornment, Box, InputLabel, IconButton, TextField, useMediaQuery, Select, MenuItem } from "@material-ui/core";
+import ImageIcon from '@mui/icons-material/Image';
+import { Input, Button, CssBaseline, InputAdornment, Box, InputLabel, IconButton, TextField, useMediaQuery, Select, MenuItem } from "@mui/material";
 import axios from "axios"
 
-const theme = createMuiTheme({
+const theme = createTheme(adaptV4Theme({
     palette: {
         background: {
             default: "#000",
@@ -37,7 +38,7 @@ const theme = createMuiTheme({
     typography: {
         fontSize: "0.9em"
     }
-});
+}));
 
 
 const useStyles = makeStyles(theme => ({
@@ -82,7 +83,7 @@ const useStyles = makeStyles(theme => ({
             maxWidth: "25em"
         }
     },
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
         mediaSelectionBox: {
             margin: "1em 0"
         },
@@ -163,7 +164,7 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const darkFormField = createMuiTheme({
+const darkFormField = createTheme(adaptV4Theme({
     palette: {
         background: {
             default: "#212121",
@@ -186,9 +187,9 @@ const darkFormField = createMuiTheme({
             disabledBackground: "#ffe082"
         }
     }
-});
+}));
 
-const lightButton = createMuiTheme({
+const lightButton = createTheme(adaptV4Theme({
     palette: {
         primary: {
             main: "#F29F39",
@@ -208,7 +209,7 @@ const lightButton = createMuiTheme({
             disabledBackground: "#292929"
         }
     }
-});
+}));
 
 
 const NewUser = props => {
@@ -282,68 +283,71 @@ const NewUser = props => {
 
 
     return (
-        <ThemeProvider theme={theme}>
+        <StyledEngineProvider injectFirst>
+            (<ThemeProvider theme={theme}>
 
-            <div className={classes.mainBox}>
-                <div className={classes.logoBox}>
-                    <img style={{
-                        height: logoSize + "em",
-                        width: "auto"
-                    }} src={logoEyeBee} />
+                <div className={classes.mainBox}>
+                    <div className={classes.logoBox}>
+                        <img style={{
+                            height: logoSize + "em",
+                            width: "auto"
+                        }} src={logoEyeBee} />
+                    </div>
+
+
+                    <StyledEngineProvider injectFirst>
+                        <ThemeProvider theme={darkFormField} >
+
+                            <form autoComplete="on" >
+                                <div className={classes.mediaSelectionBox}>
+                                    <TextField
+                                        InputLabelProps={{
+                                            shrink: true,
+                                        }}
+                                        className={classes.userNameField}
+                                        inputProps={{ style: { textAlign: 'center' } }}
+                                        value={userName}
+                                        variant="filled" label="User" placeholder="bee"
+                                        onChange={usernameChanged} />
+
+                                    <TextField
+                                        InputLabelProps={{
+                                            shrink: true,
+                                        }}
+                                        className={classes.userNameField}
+                                        inputProps={{ style: { textAlign: 'center' } }}
+                                        value={password}
+                                        variant="filled"
+                                        type="password" label="Password" placeholder="****"
+                                        onChange={passwordChanged} />
+
+                                    <TextField
+                                        InputLabelProps={{
+                                            shrink: true,
+                                        }}
+                                        className={classes.userNameField}
+                                        inputProps={{ style: { textAlign: 'center' } }}
+                                        value={password2}
+                                        variant="filled"
+                                        type="password" label="Confirm Password" placeholder="****"
+                                        onChange={confirmPasswordChanged} />
+                                </div>
+                            </form>
+
+                            <ThemeProvider theme={lightButton} >
+                                <Button disabled={!confirmPassword} onClick={login} variant="contained"
+                                    color="primary" className={`${classes.roundedBtn} ${classes.roomActionBtn}`}
+                                >Register</Button>
+                            </ThemeProvider>
+
+                        </ThemeProvider>
+                    </StyledEngineProvider>
+
+
                 </div>
-
-
-                <ThemeProvider theme={darkFormField} >
-
-                    <form autoComplete="on" >
-                        <div className={classes.mediaSelectionBox}>
-                            <TextField
-                                InputLabelProps={{
-                                    shrink: true,
-                                }}
-                                className={classes.userNameField}
-                                inputProps={{ style: { textAlign: 'center' } }}
-                                value={userName}
-                                variant="filled" label="User" placeholder="bee"
-                                onChange={usernameChanged} />
-
-                            <TextField
-                                InputLabelProps={{
-                                    shrink: true,
-                                }}
-                                className={classes.userNameField}
-                                inputProps={{ style: { textAlign: 'center' } }}
-                                value={password}
-                                variant="filled"
-                                type="password" label="Password" placeholder="****"
-                                onChange={passwordChanged} />
-
-                            <TextField
-                                InputLabelProps={{
-                                    shrink: true,
-                                }}
-                                className={classes.userNameField}
-                                inputProps={{ style: { textAlign: 'center' } }}
-                                value={password2}
-                                variant="filled"
-                                type="password" label="Confirm Password" placeholder="****"
-                                onChange={confirmPasswordChanged} />
-                        </div>
-                    </form>
-
-                    <ThemeProvider theme={lightButton} >
-                        <Button disabled={!confirmPassword} onClick={login} variant="contained"
-                            color="primary" className={`${classes.roundedBtn} ${classes.roomActionBtn}`}
-                        >Register</Button>
-                    </ThemeProvider>
-
-                </ThemeProvider>
-
-
-            </div>
-        </ThemeProvider>
-
-    )
+            </ThemeProvider>)
+        </StyledEngineProvider>
+    );
 }
 
 export default NewUser;

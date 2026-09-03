@@ -1,8 +1,17 @@
 import React, { useEffect, useState } from "react";
 
-import { Close, LocalActivity, PanTool, Send } from "@material-ui/icons";
-import { CircularProgress, Box, ThemeProvider, CssBaseline, Fade, Collapse } from "@material-ui/core";
-import { makeStyles, useTheme } from '@material-ui/core/styles';
+import { Close, LocalActivity, PanTool, Send } from "@mui/icons-material";
+import {
+    CircularProgress,
+    Box,
+    ThemeProvider,
+    StyledEngineProvider,
+    CssBaseline,
+    Fade,
+    Collapse,
+} from "@mui/material";
+import { useTheme } from '@mui/material/styles';
+import makeStyles from '@mui/styles/makeStyles';
 import PerformanceTestRunner from "./perf-test-runner";
 import SpeedTest from "./speed-test";
 import WebRTCConnectionTest from "./webrtc-connection-test";
@@ -225,114 +234,115 @@ const PeerTestWidget = (props) => {
 
 
     return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <div className={classes.mainBox}>
+        <StyledEngineProvider injectFirst>
+            (<ThemeProvider theme={theme}>
+                <CssBaseline />
+                <div className={classes.mainBox}>
 
-                <Collapse in={true} collapsedHeight="3em" >
-                    {
-                        !running && testResults ?
-                            (
-                                <Fade in={!running} >
-
-                                    {
-                                        props.showStats ?
-                                        (
-                                            <div style={{
-                                                display:"flex",
-                                                alignItems:"center",
-                                                justifyContent:"space-evenly"
-                                            }}>
-            
-                                                {
-                                                    testResults && Object.keys(testResults).map( testId => {
-                                                        return (
-                                                            <div key={testId} style={{
-                                                                display:"flex",
-                                                                flexDirection:"column",
-                                                                alignItems:"center",
-                                                                justifyContent:"center",
-                                                                margin:"0 0.5em 0 0.5em"
-                                                            }}>
-                                                                <p className={classes.testLabel}>
-                                                                    {testResults[testId].name}
-                                                                </p>
-            
-                                                                <p className={classes.testValue}>
-                                                                    
-                                                                    {
-                                                                        ["CPU","GPU"].indexOf(testId) !== -1 ?
-            
-                                                                        testResults[testId].value.toFixed(4)+" "+(testResults[testId].unit ? testResults[testId].unit: "") :
-                                                                        ( ["Latency"].indexOf(testId) !== -1 ? 
-                                                                            testResults[testId].value.toFixed(0)+" "+(testResults[testId].unit ? testResults[testId].unit: "")
-                                                                            :
-                                                                            testResults[testId].value+" "+(testResults[testId].unit ? testResults[testId].unit: "")
-                                                                        ) 
-                                                                        
-                                                                        
-                                                                    }
-                                                                </p>
-            
-                                                            </div>
-                                                        )
-                                                    })
-                                                }
-                                                
-                                            </div>
-                                        )
-                                        :
-                                        (
-                                            <p style={{
-                                                color: theme.palette.primary.main,
-                                                fontWeight:"bold"
-                                            }}>Done</p>
-                                        )
-
-                                    }
-
-                                </Fade>
-
-                            )
-                            :
-                            (
-                                <Fade in={running} >
-                                    <p className={classes.mainText}>
-                                        Checking device capabilities, please wait a moment...
-                                    </p>
-                                </Fade>
-
-                            )
-                    }
-
-                    <div style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center"
-                    }}>
-
+                    <Collapse in={true} collapsedSize="3em" >
                         {
-                            progress < 100 ?
+                            !running && testResults ?
                                 (
-                                    <Fade in={progress < 100} >
-                                        <CircularProgressWithLabel value={progress} theme={theme} size={50} />
+                                    <Fade in={!running} >
+
+                                        {
+                                            props.showStats ?
+                                            (
+                                                <div style={{
+                                                    display:"flex",
+                                                    alignItems:"center",
+                                                    justifyContent:"space-evenly"
+                                                }}>
+                
+                                                    {
+                                                        testResults && Object.keys(testResults).map( testId => {
+                                                            return (
+                                                                <div key={testId} style={{
+                                                                    display:"flex",
+                                                                    flexDirection:"column",
+                                                                    alignItems:"center",
+                                                                    justifyContent:"center",
+                                                                    margin:"0 0.5em 0 0.5em"
+                                                                }}>
+                                                                    <p className={classes.testLabel}>
+                                                                        {testResults[testId].name}
+                                                                    </p>
+                
+                                                                    <p className={classes.testValue}>
+                                                                        
+                                                                        {
+                                                                            ["CPU","GPU"].indexOf(testId) !== -1 ?
+                
+                                                                            testResults[testId].value.toFixed(4)+" "+(testResults[testId].unit ? testResults[testId].unit: "") :
+                                                                            ( ["Latency"].indexOf(testId) !== -1 ? 
+                                                                                testResults[testId].value.toFixed(0)+" "+(testResults[testId].unit ? testResults[testId].unit: "")
+                                                                                :
+                                                                                testResults[testId].value+" "+(testResults[testId].unit ? testResults[testId].unit: "")
+                                                                            ) 
+                                                                            
+                                                                            
+                                                                        }
+                                                                    </p>
+                
+                                                                </div>
+                                                            )
+                                                        })
+                                                    }
+                                                    
+                                                </div>
+                                            )
+                                            :
+                                            (
+                                                <p style={{
+                                                    color: theme.palette.primary.main,
+                                                    fontWeight:"bold"
+                                                }}>Done</p>
+                                            )
+
+                                        }
+
                                     </Fade>
+
                                 )
                                 :
-                                (<div />)
+                                (
+                                    <Fade in={running} >
+                                        <p className={classes.mainText}>
+                                            Checking device capabilities, please wait a moment...
+                                        </p>
+                                    </Fade>
+
+                                )
                         }
 
-                        
+                        <div style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                        }}>
+
+                            {
+                                progress < 100 ?
+                                    (
+                                        <Fade in={progress < 100} >
+                                            <CircularProgressWithLabel value={progress} theme={theme} size={50} />
+                                        </Fade>
+                                    )
+                                    :
+                                    (<div />)
+                            }
+
+                            
 
 
 
-                    </div>
+                        </div>
 
-                </Collapse>
+                    </Collapse>
 
-            </div>
-        </ThemeProvider>
-
+                </div>
+            </ThemeProvider>)
+        </StyledEngineProvider>
     );
 };
 

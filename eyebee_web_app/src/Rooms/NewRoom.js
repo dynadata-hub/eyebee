@@ -1,11 +1,27 @@
 import React, { useEffect, useState, useRef, createRef } from "react";
 
 //import useChat from "../useChat";
-import { Close, PanTool, Send } from "@material-ui/icons";
-import { FormGroup, TextField, RadioGroup, FormControlLabel, Radio, SvgIcon, Button, IconButton, ThemeProvider, CssBaseline,Switch } from "@material-ui/core";
-import { makeStyles, createMuiTheme, useTheme } from '@material-ui/core/styles';
+import { Close, PanTool, Send } from "@mui/icons-material";
+import {
+    FormGroup,
+    TextField,
+    RadioGroup,
+    FormControlLabel,
+    Radio,
+    SvgIcon,
+    Button,
+    IconButton,
+    ThemeProvider,
+    StyledEngineProvider,
+    CssBaseline,
+    Switch,
+    adaptV4Theme,
+} from "@mui/material";
+import { createTheme, useTheme } from '@mui/material/styles';
 
-const darkFormField = createMuiTheme({
+import makeStyles from '@mui/styles/makeStyles';
+
+const darkFormField = createTheme(adaptV4Theme({
     palette: {
         background: {
             default: "#212121",
@@ -28,7 +44,7 @@ const darkFormField = createMuiTheme({
             disabledBackground: "#ffe082"
         }
     }
-});
+}));
 
 const useStyles = makeStyles(theme => ({
     mainBox: {
@@ -108,82 +124,87 @@ const NewRoom = (props) => {
     };
 
     return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <div className={classes.newSubRoom} id="new-room">
-                <div className={classes.writeBox} >
-                    <ThemeProvider theme={darkFormField} >
-                        <TextField
-                            style={{
-                                flex: "2",
-                                backgroundColor: darkFormField.palette.background.default
-                            }}
-                            variant="filled"
-                            value={roomName}
-                            onChange={updateMessageField}
-                            placeholder="Sala 1"
-                            variant="outlined"
-                            rows={1}
-                            rowsMax={1}
-                        />
-                    </ThemeProvider>
+        <StyledEngineProvider injectFirst>(<ThemeProvider theme={theme}>
+                    <CssBaseline />
+                    <div className={classes.newSubRoom} id="new-room">
+                        <div className={classes.writeBox} >
+                            <StyledEngineProvider injectFirst>
+                                <ThemeProvider theme={darkFormField} >
+                                    <TextField
+                                        style={{
+                                            flex: "2",
+                                            backgroundColor: darkFormField.palette.background.default
+                                        }}
+                                        variant="filled"
+                                        value={roomName}
+                                        onChange={updateMessageField}
+                                        placeholder="Sala 1"
+                                        variant="outlined"
+                                        rows={1}
+                                        maxRows={1}
+                                    />
+                                </ThemeProvider>
+                            </StyledEngineProvider>
 
 
 
-                </div>
-                <div className={classes.writeBox}>
-                    <ThemeProvider theme={darkFormField} >
-                        <TextField
-                            style={{
-                                flex: "2",
-                                backgroundColor: darkFormField.palette.background.default
-                            }}
-                            variant="filled"
-                            value={roomMax}
-                            onChange={updateRoomMaxField}
-                            placeholder="Usuarios"
-                            variant="outlined"
-                            type="number"
-                        />
-                    </ThemeProvider>
+                        </div>
+                        <div className={classes.writeBox}>
+                            <StyledEngineProvider injectFirst>
+                                <ThemeProvider theme={darkFormField} >
+                                    <TextField
+                                        style={{
+                                            flex: "2",
+                                            backgroundColor: darkFormField.palette.background.default
+                                        }}
+                                        variant="filled"
+                                        value={roomMax}
+                                        onChange={updateRoomMaxField}
+                                        placeholder="Usuarios"
+                                        variant="outlined"
+                                        type="number"
+                                    />
+                                </ThemeProvider>
+                            </StyledEngineProvider>
 
-                </div>
+                        </div>
 
-                <div className={classes.writeBox}>
-                    <Button color={"secondary"}
-                        style={{
-                            flex: "1",
-                            border: "solid 2px #4e4d4d",
-                            color: "#4e4d4d",
-                            borderRadius: "5px",
-                            padding: "5px",
-                            maxWidth: "120px",
-                            margin: "10px"
-                        }}
-                        onClick={props.toogleCreateNewSubRoom}
-                    >
-                        Close
-                    </Button>
-                    <Button color={"primary"}
-                        style={{
-                            flex: "1",
-                            border: "solid 2px #f29f3f",
-                            borderRadius: "5px",
-                            padding: "5px",
-                            background: "#f29f3f",
-                            color: "#fff",
-                            maxWidth: "120px",
-                            margin: "10px"
-                        }}
-                        onClick={createSubRoom}
-                    >
-                        Create
-                    </Button>
+                        <div className={classes.writeBox}>
+                            <Button color={"secondary"}
+                                style={{
+                                    flex: "1",
+                                    border: "solid 2px #4e4d4d",
+                                    color: "#4e4d4d",
+                                    borderRadius: "5px",
+                                    padding: "5px",
+                                    maxWidth: "120px",
+                                    margin: "10px"
+                                }}
+                                onClick={props.toogleCreateNewSubRoom}
+                            >
+                                Close
+                            </Button>
+                            <Button color={"primary"}
+                                style={{
+                                    flex: "1",
+                                    border: "solid 2px #f29f3f",
+                                    borderRadius: "5px",
+                                    padding: "5px",
+                                    background: "#f29f3f",
+                                    color: "#fff",
+                                    maxWidth: "120px",
+                                    margin: "10px"
+                                }}
+                                onClick={createSubRoom}
+                            >
+                                Create
+                            </Button>
 
-                </div>
-            </div>
-        </ThemeProvider>
-    )
+                        </div>
+                    </div>
+                </ThemeProvider>)
+                    </StyledEngineProvider>
+    );
 }
 
 export default NewRoom;

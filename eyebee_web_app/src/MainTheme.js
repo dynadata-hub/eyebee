@@ -1,9 +1,9 @@
 import React from "react";
 
-import {createTheme } from '@material-ui/core/styles';
+import { createTheme, adaptV4Theme } from '@mui/material/styles';
 
 
-const mainTheme = createTheme({
+const mainTheme = createTheme(adaptV4Theme({
     palette: {
         background: {
             default: "#000",
@@ -34,6 +34,6 @@ const mainTheme = createTheme({
     typography: {
         fontSize: "0.9em"
     }
-});
+}));
 
 export default mainTheme;

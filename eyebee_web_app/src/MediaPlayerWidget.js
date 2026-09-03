@@ -2,11 +2,12 @@ import React, { useEffect, useState, useRef } from "react";
 
 import "./hexagon1.css";
 import "./bgHex.css";
-import { makeStyles, ThemeProvider, useTheme, createMuiTheme } from '@material-ui/core/styles';
-import { CssBaseline } from "@material-ui/core";
+import { ThemeProvider, StyledEngineProvider, useTheme, createTheme, adaptV4Theme } from '@mui/material/styles';
+import makeStyles from '@mui/styles/makeStyles';
+import { CssBaseline } from "@mui/material";
 import testImg from "./img/default-avatar.png";
 
-const secondaryTheme = createMuiTheme({
+const secondaryTheme = createTheme(adaptV4Theme({
     palette: {
         background: {
             default: "#000",
@@ -15,7 +16,7 @@ const secondaryTheme = createMuiTheme({
             main: "#212121"
         }
     }
-});
+}));
 
 const useStyles = makeStyles(theme => ({
     mainBox: {
@@ -140,111 +141,113 @@ const MediaPlayerWidget = (props) => {
     // }
 
     return (
-        <ThemeProvider theme={props.background === "primary" ? theme : secondaryTheme} >
-            <CssBaseline />
-            <div className={classes.mainBox} style={{
-                position: "relative",
-
-
-            }}>
-
-                <div className={classes.bgBox} >
-                    <div className="hex" style={{
-                        color: props.background === "primary" ? theme.palette.primary.main : secondaryTheme.palette.primary.main
-                    }} >
-
-                    </div>
-
-
-
-                    <svg style={{
-                        visibility: "hidden",
-                        position: "absolute"
-                    }} width="0" height="0" xmlns="http://www.w3.org/2000/svg" version="1.1">
-                        <defs>
-                            <filter id="goo"><feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
-                                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
-                                <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-                            </filter>
-                        </defs>
-                    </svg>
-                </div>
-
-                <div className="hexagon hexagon1" style={{
-                    zIndex: "0",
+        <StyledEngineProvider injectFirst>
+            (<ThemeProvider theme={props.background === "primary" ? theme : secondaryTheme} >
+                <CssBaseline />
+                <div className={classes.mainBox} style={{
                     position: "relative",
-                    visibility: showPlayer ? "visible" : "hidden",
-                    width: props.playerSize ? (props.playerSize * 1.3) + "px" : "100px",
+
+
                 }}>
 
-                    <div className="hexagon-in1" style={{
-                        zIndex: "-1",
+                    <div className={classes.bgBox} >
+                        <div className="hex" style={{
+                            color: props.background === "primary" ? theme.palette.primary.main : secondaryTheme.palette.primary.main
+                        }} >
+
+                        </div>
+
+
+
+                        <svg style={{
+                            visibility: "hidden",
+                            position: "absolute"
+                        }} width="0" height="0" xmlns="http://www.w3.org/2000/svg" version="1.1">
+                            <defs>
+                                <filter id="goo"><feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
+                                    <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
+                                    <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+                                </filter>
+                            </defs>
+                        </svg>
+                    </div>
+
+                    <div className="hexagon hexagon1" style={{
+                        zIndex: "0",
+                        position: "relative",
                         visibility: showPlayer ? "visible" : "hidden",
-                        position: "relative"
+                        width: props.playerSize ? (props.playerSize * 1.3) + "px" : "100px",
                     }}>
-                        <div className="hexagon-in2">
-                            <div style={{
-                                display: "flex",
-                                position: "relative",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                visibility: showPlayer ? "visible" : "hidden",
-                                height: props.playerSize ? props.playerSize + "px" : "100px",
-                                width: props.playerSize ? (props.playerSize * 1.3) + "px" : "100px",
-                                overflow: "hidden"
 
-                            }}>
+                        <div className="hexagon-in1" style={{
+                            zIndex: "-1",
+                            visibility: showPlayer ? "visible" : "hidden",
+                            position: "relative"
+                        }}>
+                            <div className="hexagon-in2">
+                                <div style={{
+                                    display: "flex",
+                                    position: "relative",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    visibility: showPlayer ? "visible" : "hidden",
+                                    height: props.playerSize ? props.playerSize + "px" : "100px",
+                                    width: props.playerSize ? (props.playerSize * 1.3) + "px" : "100px",
+                                    overflow: "hidden"
 
-                                <img style={{
-                                    height: props.playerSize ? props.playerSize + "px" : "150px",
-                                    width: "auto",
-                                    zIndex: "-1",
-                                    position: "absolute",
-                                    backgroundColor: "black",
-                                    visibility: props.isCameraEnable ? "hidden" : "visible"
-                                }}
-                                    src={props.avatar != '' ? props.avatar : testImg}
-                                />
-                                <video
-                                playsInline
-                               
-                                    style={{
-                                        visibility: props.isCameraEnable ? "visible" : "hidden",
-                                        width: "auto",
+                                }}>
+
+                                    <img style={{
                                         height: props.playerSize ? props.playerSize + "px" : "150px",
+                                        width: "auto",
                                         zIndex: "-1",
                                         position: "absolute",
                                         backgroundColor: "black",
-                                        transform: "rotateY(180deg) scale(" + (vidHeight > vidWidth ? "1.5)" : "1)")
-                                    }} ref={videoEl} autoPlay />
+                                        visibility: props.isCameraEnable ? "hidden" : "visible"
+                                    }}
+                                        src={props.avatar != '' ? props.avatar : testImg}
+                                    />
+                                    <video
+                                    playsInline
+                                   
+                                        style={{
+                                            visibility: props.isCameraEnable ? "visible" : "hidden",
+                                            width: "auto",
+                                            height: props.playerSize ? props.playerSize + "px" : "150px",
+                                            zIndex: "-1",
+                                            position: "absolute",
+                                            backgroundColor: "black",
+                                            transform: "rotateY(180deg) scale(" + (vidHeight > vidWidth ? "1.5)" : "1)")
+                                        }} ref={videoEl} autoPlay />
 
-                                {
-                                    props.label && showLabel ?
-                                        (
-                                            <div id="label" className={classes.userNameBox} >
-                                                <p style={{
-                                                    margin: "0",
-                                                    maxWidth: "55%",
-                                                    textAlign: "center"
-                                                }}>{props.label}</p>
+                                    {
+                                        props.label && showLabel ?
+                                            (
+                                                <div id="label" className={classes.userNameBox} >
+                                                    <p style={{
+                                                        margin: "0",
+                                                        maxWidth: "55%",
+                                                        textAlign: "center"
+                                                    }}>{props.label}</p>
 
-                                            </div>
-                                        )
-                                        :
-                                        (
-                                            <div />
-                                        )
-                                }
+                                                </div>
+                                            )
+                                            :
+                                            (
+                                                <div />
+                                            )
+                                    }
 
+                                </div>
                             </div>
                         </div>
+
                     </div>
 
                 </div>
-
-            </div>
-        </ThemeProvider>
+            </ThemeProvider>)
+        </StyledEngineProvider>
     );
 };
 

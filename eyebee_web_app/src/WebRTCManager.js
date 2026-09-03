@@ -1,4 +1,4 @@
-import { BrokenImage } from "@material-ui/icons";
+import { BrokenImage } from "@mui/icons-material";
 
 class WebRTCManager {
 

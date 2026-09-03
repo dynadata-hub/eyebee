@@ -1,15 +1,29 @@
 import React, { useEffect, useState, useRef, createRef } from "react";
 
 //import useChat from "../useChat";
-import { Close, PanTool, Send } from "@material-ui/icons";
-import { FormGroup, TextField, RadioGroup, FormControlLabel, Radio, SvgIcon, Button, IconButton, ThemeProvider, CssBaseline } from "@material-ui/core";
-import { makeStyles, createMuiTheme, useTheme } from '@material-ui/core/styles';
+import { Close, PanTool, Send } from "@mui/icons-material";
+import {
+    FormGroup,
+    TextField,
+    RadioGroup,
+    FormControlLabel,
+    Radio,
+    SvgIcon,
+    Button,
+    IconButton,
+    ThemeProvider,
+    StyledEngineProvider,
+    CssBaseline,
+    adaptV4Theme,
+} from "@mui/material";
+import { createTheme, useTheme } from '@mui/material/styles';
+import makeStyles from '@mui/styles/makeStyles';
 import ChatItem from "../ChatItem";
-import { Share, Add } from '@material-ui/icons';
+import { Share, Add } from '@mui/icons-material';
 import { ReactComponent as SubRoomSVG } from '../img/subroom-icon.svg';
 import AutoSizer from "react-virtualized-auto-sizer";
 
-const darkFormField = createMuiTheme({
+const darkFormField = createTheme(adaptV4Theme({
     palette: {
         background: {
             default: "#212121",
@@ -32,7 +46,7 @@ const darkFormField = createMuiTheme({
             disabledBackground: "#ffe082"
         }
     }
-});
+}));
 
 const useStyles = makeStyles(theme => ({
     mainBox: {
@@ -113,95 +127,102 @@ const CreateNewSubRoom = (props) => {
 
 
     return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <div className={classes.newSubRoom} id="new-room">
-                <div className={classes.writeBox}>
-                    <ThemeProvider theme={darkFormField} >
-                        <TextField
-                            style={{
-                                flex: "2",
-                                backgroundColor: darkFormField.palette.background.default
-                            }}
-                            variant="filled"
-                            value={roomName}
-                            onChange={updateMessageField}
-                            placeholder="Sala 1"
-                            variant="outlined"
-                            rows={1}
-                            rowsMax={1}
-                        />
-                    </ThemeProvider>
+        <StyledEngineProvider injectFirst>(<ThemeProvider theme={theme}>
+                    <CssBaseline />
+                    <div className={classes.newSubRoom} id="new-room">
+                        <div className={classes.writeBox}>
+                            <StyledEngineProvider injectFirst>
+                                <ThemeProvider theme={darkFormField} >
+                                    <TextField
+                                        style={{
+                                            flex: "2",
+                                            backgroundColor: darkFormField.palette.background.default
+                                        }}
+                                        variant="filled"
+                                        value={roomName}
+                                        onChange={updateMessageField}
+                                        placeholder="Sala 1"
+                                        variant="outlined"
+                                        rows={1}
+                                        maxRows={1}
+                                    />
+                                </ThemeProvider>
+                            </StyledEngineProvider>
 
-                    <ThemeProvider theme={darkFormField} >
-                        <TextField
-                            style={{
-                                flex: "1",
-                                backgroundColor: darkFormField.palette.background.default
-                            }}
-                            variant="filled"
-                            value={roomMax}
-                            onChange={updateRoomMaxField}
-                            placeholder="Usuarios"
-                            variant="outlined"
-                            type="number"
-                        />
-                    </ThemeProvider>
+                            <StyledEngineProvider injectFirst>
+                                <ThemeProvider theme={darkFormField} >
+                                    <TextField
+                                        style={{
+                                            flex: "1",
+                                            backgroundColor: darkFormField.palette.background.default
+                                        }}
+                                        variant="filled"
+                                        value={roomMax}
+                                        onChange={updateRoomMaxField}
+                                        placeholder="Usuarios"
+                                        variant="outlined"
+                                        type="number"
+                                    />
+                                </ThemeProvider>
+                            </StyledEngineProvider>
 
 
-                </div>
-                <div className={classes.writeBox}>
-                    <FormGroup row>
-                        <ThemeProvider theme={darkFormField} >
+                        </div>
+                        <div className={classes.writeBox}>
+                            <FormGroup row>
+                                <StyledEngineProvider injectFirst>
+                                    <ThemeProvider theme={darkFormField} >
 
-                            <RadioGroup aria-label="gender" name="gender1" value={type} onChange={handleChange}>
-                                <FormControlLabel value="public" control={<Radio style={{
-                                    flex: "1"
-                                }} />} label="Publica" />
-                                <FormControlLabel value="private" control={<Radio style={{
-                                    flex: "1"
-                                }} />} label="Privada" />
-                            </RadioGroup>
+                                        <RadioGroup aria-label="gender" name="gender1" value={type} onChange={handleChange}>
+                                            <FormControlLabel value="public" control={<Radio style={{
+                                                flex: "1"
+                                            }} />} label="Publica" />
+                                            <FormControlLabel value="private" control={<Radio style={{
+                                                flex: "1"
+                                            }} />} label="Privada" />
+                                        </RadioGroup>
 
-                        </ThemeProvider>
-                    </FormGroup>
+                                    </ThemeProvider>
+                                </StyledEngineProvider>
+                            </FormGroup>
 
-                </div>
-                <div className={classes.writeBox}>
-                    <Button color={"secondary"}
-                        style={{
-                            flex: "1",
-                            border: "solid 2px #4e4d4d",
-                            color: "#4e4d4d",
-                            borderRadius: "5px",
-                            padding: "5px",
-                            maxWidth: "120px",
-                            margin: "10px"
-                        }}
-                        onClick={props.toogleCreateNewSubRoom}
-                    >
-                        Cancelar
-                    </Button>
-                    <Button color={"primary"}
-                        style={{
-                            flex: "1",
-                            border: "solid 2px #f29f3f",
-                            borderRadius: "5px",
-                            padding: "5px",
-                            background: "#f29f3f",
-                            color: "#fff",
-                            maxWidth: "120px",
-                            margin: "10px"
-                        }}
-                        onClick={createSubRoom}
-                    >
-                        Crear
-                    </Button>
+                        </div>
+                        <div className={classes.writeBox}>
+                            <Button color={"secondary"}
+                                style={{
+                                    flex: "1",
+                                    border: "solid 2px #4e4d4d",
+                                    color: "#4e4d4d",
+                                    borderRadius: "5px",
+                                    padding: "5px",
+                                    maxWidth: "120px",
+                                    margin: "10px"
+                                }}
+                                onClick={props.toogleCreateNewSubRoom}
+                            >
+                                Cancelar
+                            </Button>
+                            <Button color={"primary"}
+                                style={{
+                                    flex: "1",
+                                    border: "solid 2px #f29f3f",
+                                    borderRadius: "5px",
+                                    padding: "5px",
+                                    background: "#f29f3f",
+                                    color: "#fff",
+                                    maxWidth: "120px",
+                                    margin: "10px"
+                                }}
+                                onClick={createSubRoom}
+                            >
+                                Crear
+                            </Button>
 
-                </div>
-            </div>
-        </ThemeProvider>
-    )
+                        </div>
+                    </div>
+                </ThemeProvider>)
+                    </StyledEngineProvider>
+    );
 }
 
 export default CreateNewSubRoom;

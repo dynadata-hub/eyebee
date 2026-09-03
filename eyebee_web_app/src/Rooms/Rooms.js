@@ -1,18 +1,20 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { makeStyles, createMuiTheme, ThemeProvider, withStyles } from '@material-ui/core/styles';
+import { createTheme, ThemeProvider, StyledEngineProvider, adaptV4Theme } from '@mui/material/styles';
+import makeStyles from '@mui/styles/makeStyles';
+import withStyles from '@mui/styles/withStyles';
 import logoEyeBee from "../img/logo_eyebee_fondo_negrov2.jpg";
-import ImageIcon from '@material-ui/icons/Image';
-import { Input, Button, CssBaseline, InputAdornment, Box, InputLabel, IconButton, TextField, useMediaQuery, Select, MenuItem } from "@material-ui/core";
-import DeleteIcon from '@material-ui/icons/Delete';
+import ImageIcon from '@mui/icons-material/Image';
+import { Input, Button, CssBaseline, InputAdornment, Box, InputLabel, IconButton, TextField, useMediaQuery, Select, MenuItem } from "@mui/material";
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useLocation, useNavigate } from "react-router-dom";
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import Paper from '@material-ui/core/Paper';
-import Avatar from '@material-ui/core/Avatar';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
+import Avatar from '@mui/material/Avatar';
 import NewRoom from "./NewRoom"
 import axios from "axios"
 import LinksRooms from "./LinksRooms";
@@ -42,7 +44,7 @@ const StyledTableRow = withStyles((theme) => ({
 }))(TableRow);
 
 
-const theme = createMuiTheme({
+const theme = createTheme(adaptV4Theme({
     palette: {
         background: {
             default: "#000",
@@ -73,7 +75,7 @@ const theme = createMuiTheme({
     typography: {
         fontSize: "0.9em"
     }
-});
+}));
 
 
 const useStyles = makeStyles(theme => ({
@@ -131,7 +133,7 @@ const useStyles = makeStyles(theme => ({
             maxWidth: "25em"
         }
     },
-    [theme.breakpoints.down("sm")]: {
+    [theme.breakpoints.down('md')]: {
         mediaSelectionBox: {
             margin: "1em 0"
         },
@@ -216,7 +218,7 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const darkFormField = createMuiTheme({
+const darkFormField = createTheme(adaptV4Theme({
     palette: {
         background: {
             default: "#212121",
@@ -239,9 +241,9 @@ const darkFormField = createMuiTheme({
             disabledBackground: "#ffe082"
         }
     }
-});
+}));
 
-const lightButton = createMuiTheme({
+const lightButton = createTheme(adaptV4Theme({
     palette: {
         primary: {
             main: "#F29F39",
@@ -261,7 +263,7 @@ const lightButton = createMuiTheme({
             disabledBackground: "#292929"
         }
     }
-});
+}));
 
 
 const Rooms = props => {
@@ -348,74 +350,79 @@ const Rooms = props => {
     }
 
     return (
-        <ThemeProvider theme={theme}>
+        <StyledEngineProvider injectFirst>
+            (<ThemeProvider theme={theme}>
 
-            <div className={classes.mainBox}>
-                {createRoom && <NewRoom toogleCreateNewSubRoom={toogleCreateNewSubRoom} createSubRoom={createNewRoom}></NewRoom>}
-                {showLinks && <LinksRooms room_id={activeRoom} toogleShowLinks={toogleShowLinks}></LinksRooms>}
+                <div className={classes.mainBox}>
+                    {createRoom && <NewRoom toogleCreateNewSubRoom={toogleCreateNewSubRoom} createSubRoom={createNewRoom}></NewRoom>}
+                    {showLinks && <LinksRooms room_id={activeRoom} toogleShowLinks={toogleShowLinks}></LinksRooms>}
 
-                <div className={classes.header}>
-                    <div className={classes.logoBox}>
-                        <img style={{
-                            height: 8 + "em",
-                            width: "auto"
-                        }} src={logoEyeBee} />
+                    <div className={classes.header}>
+                        <div className={classes.logoBox}>
+                            <img style={{
+                                height: 8 + "em",
+                                width: "auto"
+                            }} src={logoEyeBee} />
+                        </div>
+                        <div className={classes.iconBox}>
+                            <Avatar alt={location && location.state ? location.state.user.name : ""} src="/static/img/default-avatar.png" className={classes.large} />
+                            <a className={classes.link} onClick={logout}>Logout</a>
+                        </div>
                     </div>
-                    <div className={classes.iconBox}>
-                        <Avatar alt={location && location.state ? location.state.user.name : ""} src="/static/img/default-avatar.png" className={classes.large} />
-                        <a className={classes.link} onClick={logout}>Logout</a>
+                    <div className={classes.header}>
+                        <div className={classes.logoBox}>
+                            <h3 className={classes.title}>Rooms</h3>
+                        </div>
+                        <div className={classes.iconBox}>
+                            <StyledEngineProvider injectFirst>
+                                <ThemeProvider theme={lightButton} >
+                                    <Button onClick={toogleCreateNewSubRoom} variant="contained"
+                                        color="primary" className={`${classes.roundedBtn} ${classes.roomActionBtn}`}
+                                    >New room</Button>
+                                </ThemeProvider>
+                            </StyledEngineProvider>
+                        </div>
+                    </div>
+
+                    <div className={classes.header}>
+                        <TableContainer className={classes.container} component={Paper}>
+                            <Table aria-label="simple table">
+                                <TableHead>
+                                    <TableRow>
+                                        <StyledTableCell>Name</StyledTableCell>
+                                        <StyledTableCell align="right">Type</StyledTableCell>
+                                        <StyledTableCell align="right">Users</StyledTableCell>
+                                        <StyledTableCell align="right">Date</StyledTableCell>
+                                        <StyledTableCell align="right"></StyledTableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {rooms.map((room) => (
+                                        <StyledTableRow key={room.name}>
+                                            <StyledTableCell component="th" scope="row">
+                                                {room.name}
+                                            </StyledTableCell>
+                                            <StyledTableCell align="right">{room.type}</StyledTableCell>
+                                            <StyledTableCell align="right">{room.users}</StyledTableCell>
+                                            <StyledTableCell align="right">{room.date}</StyledTableCell>
+                                            <StyledTableCell align="right"> <StyledEngineProvider injectFirst>
+                                                <ThemeProvider theme={lightButton} >
+                                                    <Button variant="contained"
+                                                        color="primary" className={`${classes.roundedBtn} ${classes.roomActionBtn}`}
+                                                        onClick={() => toogleShowLinks(room.room_id)} >Get Links</Button>
+                                                    <DeleteIcon onClick={() => deleteRoom(room.room_id)} style={{ color: "#767676" }} />
+                                                </ThemeProvider>
+                                            </StyledEngineProvider></StyledTableCell>
+                                        </StyledTableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
                     </div>
                 </div>
-                <div className={classes.header}>
-                    <div className={classes.logoBox}>
-                        <h3 className={classes.title}>Rooms</h3>
-                    </div>
-                    <div className={classes.iconBox}>
-                        <ThemeProvider theme={lightButton} >
-                            <Button onClick={toogleCreateNewSubRoom} variant="contained"
-                                color="primary" className={`${classes.roundedBtn} ${classes.roomActionBtn}`}
-                            >New room</Button>
-                        </ThemeProvider>
-                    </div>
-                </div>
-
-                <div className={classes.header}>
-                    <TableContainer className={classes.container} component={Paper}>
-                        <Table aria-label="simple table">
-                            <TableHead>
-                                <TableRow>
-                                    <StyledTableCell>Name</StyledTableCell>
-                                    <StyledTableCell align="right">Type</StyledTableCell>
-                                    <StyledTableCell align="right">Users</StyledTableCell>
-                                    <StyledTableCell align="right">Date</StyledTableCell>
-                                    <StyledTableCell align="right"></StyledTableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {rooms.map((room) => (
-                                    <StyledTableRow key={room.name}>
-                                        <StyledTableCell component="th" scope="row">
-                                            {room.name}
-                                        </StyledTableCell>
-                                        <StyledTableCell align="right">{room.type}</StyledTableCell>
-                                        <StyledTableCell align="right">{room.users}</StyledTableCell>
-                                        <StyledTableCell align="right">{room.date}</StyledTableCell>
-                                        <StyledTableCell align="right"> <ThemeProvider theme={lightButton} >
-                                            <Button variant="contained"
-                                                color="primary" className={`${classes.roundedBtn} ${classes.roomActionBtn}`}
-                                                onClick={() => toogleShowLinks(room.room_id)} >Get Links</Button>
-                                            <DeleteIcon onClick={() => deleteRoom(room.room_id)} style={{ color: "#767676" }} />
-                                        </ThemeProvider></StyledTableCell>
-                                    </StyledTableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                </div>
-            </div>
-        </ThemeProvider>
-
-    )
+            </ThemeProvider>)
+        </StyledEngineProvider>
+    );
 }
 
 export default Rooms;

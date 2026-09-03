@@ -2,15 +2,17 @@ import React, { useState, useEffect, useCallback } from "react";
 
 import queryString from "query-string";
 
-import {CssBaseline, Typography} from "@material-ui/core";
+import { CssBaseline, Typography, adaptV4Theme } from "@mui/material";
 
-import { makeStyles, createTheme, ThemeProvider } from '@material-ui/core/styles';
+import { createTheme, ThemeProvider, StyledEngineProvider } from '@mui/material/styles';
+
+import makeStyles from '@mui/styles/makeStyles';
 
 import logoEyeBee from "./../img/logo_eyebee_fondo_negrov2.jpg";
 
 import DemoRoomForm from "./DemoRoomForm";
 
-const theme = createTheme({
+const theme = createTheme(adaptV4Theme({
     palette: {
         background: {
             default: "#000",
@@ -41,7 +43,7 @@ const theme = createTheme({
     typography: {
         fontSize: "0.9em"
     }
-});
+}));
 
 
 const useStyles = makeStyles(theme => ({
@@ -106,35 +108,36 @@ const LandingPage = props => {
     }
 
     return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <div className={classes.mainBox}>
+        <StyledEngineProvider injectFirst>
+            (<ThemeProvider theme={theme}>
+                <CssBaseline />
+                <div className={classes.mainBox}>
 
-                <div className={classes.logoBox}>
-                    <img style={{
-                        height: "10em",
-                        width: "auto"
-                    }} src={logoEyeBee} />
-                </div>
-                <div className={classes.manifestoBox}>
-                    <Typography color="primary" className={classes.manifesto}>
-                    Our principles act as tools for thinking, communication, and decentralized decision making
-                    </Typography>
+                    <div className={classes.logoBox}>
+                        <img style={{
+                            height: "10em",
+                            width: "auto"
+                        }} src={logoEyeBee} />
+                    </div>
+                    <div className={classes.manifestoBox}>
+                        <Typography color="primary" className={classes.manifesto}>
+                        Our principles act as tools for thinking, communication, and decentralized decision making
+                        </Typography>
+                        
+                    </div>
+
+                    <div className={classes.demoRoomBox}>
+                       <DemoRoomForm onOpenLink={openRoomURL} onCopyLink={copyLinkToClipboard}></DemoRoomForm>
+                        
+                    </div>
+
+
                     
                 </div>
 
-                <div className={classes.demoRoomBox}>
-                   <DemoRoomForm onOpenLink={openRoomURL} onCopyLink={copyLinkToClipboard}></DemoRoomForm>
-                    
-                </div>
-
-
-                
-            </div>
-
-        </ThemeProvider>
-
-    )
+            </ThemeProvider>)
+        </StyledEngineProvider>
+    );
 
 }
 

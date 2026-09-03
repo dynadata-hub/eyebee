@@ -2,12 +2,23 @@ import React, {useEffect,useState,useRef,createRef} from "react";
 
 //import useChat from "../useChat";
 
-import { Close,PanTool,Send } from "@material-ui/icons";
-import {Paper,Card,TextField,Button,IconButton,ThemeProvider, CssBaseline} from "@material-ui/core";
-import { makeStyles,createMuiTheme, useTheme } from '@material-ui/core/styles';
+import { Close,PanTool,Send } from "@mui/icons-material";
+import {
+    Paper,
+    Card,
+    TextField,
+    Button,
+    IconButton,
+    ThemeProvider,
+    StyledEngineProvider,
+    CssBaseline,
+    adaptV4Theme,
+} from "@mui/material";
+import { createTheme, useTheme } from '@mui/material/styles';
+import makeStyles from '@mui/styles/makeStyles';
 import ChatItem from "../ChatItem";
 
-const darkFormField = createMuiTheme({
+const darkFormField = createTheme(adaptV4Theme({
     palette:{
         background:{
             default: "#212121",
@@ -30,7 +41,7 @@ const darkFormField = createMuiTheme({
             disabledBackground:"#ffe082" 
         }
     }
-});
+}));
 
 const useStyles = makeStyles(theme => ({
     mainBox:{
@@ -120,70 +131,68 @@ const ChatWidget = (props) => {
     }
 
     return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <div className={classes.mainBox}>
-                <div className={classes.messagesBox}>
-                    <div className={classes.messagesInnerBox}>
-                        {
-                            props.messages && props.messages.map( (msg,index) => {
-                                return (
-                                <div key={index} className={classes.messageItemBox} >
-                                    {/* <p style={{
-                                        flex:"2",
-                                        fontSize:"0.9em",
-                                        margin:"0.5em 0"
-                                    }}>
-                                        <label
-                                            className={classes.fromLabel}
-                                        >{props.participants && props.participants[msg.from] ? props.participants[msg.from].userName : "desconocido"}
-                                        </label> 
-                                        {msg.message}
-                                    </p> */}
+        <StyledEngineProvider injectFirst>(<ThemeProvider theme={theme}>
+                    <CssBaseline />
+                    <div className={classes.mainBox}>
+                        <div className={classes.messagesBox}>
+                            <div className={classes.messagesInnerBox}>
+                                {
+                                    props.messages && props.messages.map( (msg,index) => {
+                                        return (
+                                        <div key={index} className={classes.messageItemBox} >
+                                            {/* <p style={{
+                                                flex:"2",
+                                                fontSize:"0.9em",
+                                                margin:"0.5em 0"
+                                            }}>
+                                                <label
+                                                    className={classes.fromLabel}
+                                                >{props.participants && props.participants[msg.from] ? props.participants[msg.from].userName : "desconocido"}
+                                                </label> 
+                                                {msg.message}
+                                            </p> */}
 
-                                    <ChatItem user={props.participants && props.participants[msg.from] ? props.participants[msg.from] : null}
-                                    label={props.participants && props.participants[msg.from] ? props.participants[msg.from].userName : null} message={msg.message}></ChatItem>
+                                            <ChatItem user={props.participants && props.participants[msg.from] ? props.participants[msg.from] : null}
+                                            label={props.participants && props.participants[msg.from] ? props.participants[msg.from].userName : null} message={msg.message}></ChatItem>
+                                        </div>
+                                        )
+                                    })
+                                }
+                                <div style={{ float:"left", clear: "both" }}
+                                    ref={listRef}>
                                 </div>
-                                )
-                            })
-                        }
-                        <div style={{ float:"left", clear: "both" }}
-                            ref={listRef}>
+                            </div>
+                        </div>
+                        <div className={classes.writeBox}>
+                            <StyledEngineProvider injectFirst>
+                                <ThemeProvider theme={darkFormField} >
+                                    <TextField 
+                                        multiline
+                                        style={{
+                                            flex:"2",
+                                            backgroundColor:darkFormField.palette.background.default
+                                        }}
+                                        variant="filled"
+                                        value={message}
+                                        onKeyUp={keyPressed}
+                                        onChange={updateMessageField}
+                                        placeholder="Escribe un mensaje"
+                                        variant="outlined"
+                                        rows={2}
+                                        maxRows={2}
+                                    />
+                                </ThemeProvider>
+                            </StyledEngineProvider>
+                            <IconButton color="primary" onClick={send} size="large">
+                                <Send style={{
+                                    width:"2em",
+                                    height:"2em"
+                                }} />
+                            </IconButton>
                         </div>
                     </div>
-                </div>
-                <div className={classes.writeBox}>
-                    <ThemeProvider theme={darkFormField} >
-                        <TextField 
-                            multiline
-                            style={{
-                                flex:"2",
-                                backgroundColor:darkFormField.palette.background.default
-                            }}
-                            variant="filled"
-                            value={message}
-                            onKeyUp={keyPressed}
-                            onChange={updateMessageField}
-                            placeholder="Escribe un mensaje"
-                            variant="outlined"
-                            rows={2}
-                            rowsMax={2}
-                        />
-                    </ThemeProvider>
-                    <IconButton
-                        color="primary"
-                        
-                        onClick={send}
-                    >
-                        <Send style={{
-                            width:"2em",
-                            height:"2em"
-                        }} />
-                    </IconButton>
-                </div>
-            </div>
-        </ThemeProvider>
-
+                </ThemeProvider>)
+                    </StyledEngineProvider>
     );
 };
 
