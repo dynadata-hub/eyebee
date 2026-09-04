@@ -21,7 +21,8 @@ let helmet = require('helmet');
 const cors = require('cors');
 app.use(cors())
 
-let bodyParser = require("body-parser");
+// body-parser removed — using Express 5 built-in express.json() and express.urlencoded()
+const express = require("express");
 const MemoryDatabaseAPI = require("./memory-database-api");
 const memoryDBAPI = new MemoryDatabaseAPI();
 
@@ -222,9 +223,9 @@ const getSessions = async (sessionId) => {
 
 app.use(helmet());
 
-app.use(bodyParser.json());
+app.use(express.json());
 
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
 app.get("/health", (req, res) => {
