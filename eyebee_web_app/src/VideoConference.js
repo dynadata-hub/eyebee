@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation } from "react-router-dom";
 
-import RoomAPI from "./Room/RoomAPI";
-import UserAPI from "./UserAPI";
 import MobileDeviceDetector from "./MobileDeviceDetector";
 
 //import {} from "@mui/material";

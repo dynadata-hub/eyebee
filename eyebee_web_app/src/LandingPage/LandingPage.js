@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 
-import queryString from "query-string";
 
 import { CssBaseline, Typography, adaptV4Theme } from "@mui/material";
 

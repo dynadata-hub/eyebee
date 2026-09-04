@@ -35,10 +35,10 @@ const credentialsPath = process.env.FIREBASE_CREDENTIALS_PATH || '../secrets/fir
 let serviceAccount;
 try {
     serviceAccount = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
-    console.log('✓ Firebase credentials loaded successfully from:', credentialsPath);
+    logger.info('✓ Firebase credentials loaded successfully from:', credentialsPath);
 } catch (error) {
-    console.error('✗ Error loading Firebase credentials:', error.message);
-    console.error('  Make sure the file exists at:', credentialsPath);
+    logger.error('✗ Error loading Firebase credentials:', error.message);
+    logger.error('  Make sure the file exists at:', credentialsPath);
     process.exit(1);
 }
 
@@ -166,14 +166,14 @@ const assessPeerCapacity = (peerStats) => {
     
     let cpuScore = CPUCapacityScores[CPUCapacityScores.length - 1].score;
     for(let i=0; i< CPUCapacityScores.length; i++){
-        console.log("comparando cpu "+peerStats.CPU.value+" "+ CPUCapacityScores[i].max);
+        logger.info("comparando cpu "+peerStats.CPU.value+" "+ CPUCapacityScores[i].max);
         if(peerStats.CPU.value <= CPUCapacityScores[i].max){
             cpuScore = CPUCapacityScores[i].score;
             break;
         }
     }
 
-    console.log("assessPeerCapacity -- resultado del cpuScore "+cpuScore);
+    logger.info("assessPeerCapacity -- resultado del cpuScore "+cpuScore);
 
     let netScore = NETCapacityScores[NETCapacityScores.length - 1].score;
     for(let i=0; i< NETCapacityScores.length; i++){
@@ -183,7 +183,7 @@ const assessPeerCapacity = (peerStats) => {
         }
     }
 
-    console.log("assessPeerCapacity -- resultado del netScore "+netScore);
+    logger.info("assessPeerCapacity -- resultado del netScore "+netScore);
 
     let result = {};
     let supportsSTUN = peerStats.connectionType.value === "STUN";
@@ -243,10 +243,10 @@ app.get("/health", (req, res) => {
             version: require('./package.json').version || '0.5.0'
         };
         
-        console.log('Health check performed:', healthStatus);
+        logger.info('Health check performed:', healthStatus);
         res.status(200).json(healthStatus);
     } catch (error) {
-        console.error('Health check error:', error);
+        logger.error('Health check error:', error);
         res.status(503).json({
             status: 'unhealthy',
             error: error.message,
@@ -268,7 +268,7 @@ app.get("/peers", (req, res) => {
         res.json(result);
 
     }).catch(err => {
-        console.log("Error on /peers", { error: err });
+        logger.info("Error on /peers", { error: err });
         res.status(500).send(err);
     });
 
@@ -282,7 +282,7 @@ app.get("/sessions", (req, res) => {
         res.json(result);
 
     }).catch(err => {
-        console.log("Error on /sessions", { error: err });
+        logger.info("Error on /sessions", { error: err });
         res.status(500).send(err);
     });
 
@@ -296,7 +296,7 @@ app.get("/sessions/:sessionId", (req, res) => {
         res.json(result);
 
     }).catch(err => {
-        console.log("Error on /sessions/:sessionId", { error: err });
+        logger.info("Error on /sessions/:sessionId", { error: err });
         res.status(500).send(err);
     });
 
@@ -305,33 +305,33 @@ app.get("/sessions/:sessionId", (req, res) => {
 
 app.post("/session/leave", (req, res) => {
 
-    console.log("llega a post leave", { body: req.body });
+    logger.info("llega a post leave", { body: req.body });
     removePeerFromSession(req.body.roomId, req.body.userId).then(result => {
-        console.log("peer removal successfully executed", { result: result });
+        logger.info("peer removal successfully executed", { result: result });
         res.sendStatus(200);
 
     }).catch(err => {
-        console.log("Error on removePeerFromSession", { error: err });
+        logger.info("Error on removePeerFromSession", { error: err });
         res.sendStatus(500);
     });
 
 });
 
 app.post("/upload-avatar", multer.single('file'), (req, res) => {
-    console.log('Upload Image');
+    logger.info('Upload Image');
 
     let file = req.file;
-    console.log(file);
+    logger.info(file);
     if (file) {
         uploadImageToStorage(file).then((success) => {
-            console.log(success);
+            logger.info(success);
             res.status(200).send({
                 status: 'success',
                 fileName: "",
                 filePath: success
             });
         }).catch((error) => {
-            console.error(error);
+            logger.error(error);
         });
     }
 });
@@ -345,7 +345,7 @@ const uploadImageToStorage = (file) => {
 
         let fileUpload = bucket.file(newFileName);
 
-        // console.log(file.mimetype);
+        // logger.info(file.mimetype);
         const blobStream = fileUpload.createWriteStream({
             metadata: {
                 // This line is very important. It's to create a download token.
@@ -364,7 +364,7 @@ const uploadImageToStorage = (file) => {
         });
 
         blobStream.on('finish', () => {
-            //console.log(fileUpload);
+            //logger.info(fileUpload);
             // The public URL can be used to directly access the file via HTTP.
             const publicUrl =
                 `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURI(fileUpload.name)}?alt=media`;
@@ -386,27 +386,21 @@ let io = require('socket.io')(server, {
 });
 
 server.listen(process.env.PORT, () => {
-    console.log(process.env.SERVICE_NAME + " listening on " + process.env.PORT);
+    logger.info(process.env.SERVICE_NAME + " listening on " + process.env.PORT);
 });
 
-// io.use((socket, next) => {
-//     io.engine.generateId = () => socket.handshake.query.peer_id;
-//     next(null, true);
-// });
-
-//WebrtcSessionAPI 
 /**
  * 
  * @param {*} peerId 
  * @param {*} connectionData an object containing data about the connected peer
  */
 const removeConnectedPeer = async (peers,sessionId, peerId) => {
-    console.debug("starting removeConnectedPeer", { peerId: peerId });
+    logger.debug("starting removeConnectedPeer", { peerId: peerId });
     //I'm implementing a manual lookup through all the docs but this needs to be a query to the database
 
     let leavingPeerStreams = peers[peerId] ? peers[peerId].localStreams : null;
     if(leavingPeerStreams){
-        console.debug("removeConnectedPeer -- removing references of leaving peer's stream",{
+        logger.debug("removeConnectedPeer -- removing references of leaving peer's stream",{
             leavingPeerId: peerId
         });
 
@@ -417,7 +411,7 @@ const removeConnectedPeer = async (peers,sessionId, peerId) => {
     let peersAfter = await memoryDBAPI.queryCollection("session_peers", [{ "field": "session_id", "operator": "==", "value": sessionId }]);
     await memoryDBAPI.deleteById("session_peers", peerId);
 
-    console.log("peers state after processing removeConnectePeer", { peersAfter: peersAfter });
+    logger.info("peers state after processing removeConnectePeer", { peersAfter: peersAfter });
     return peersAfter;
 }
 
@@ -431,24 +425,6 @@ const endSession = async (sessionId) => {
     });
     
     return sessionId;
-}
-
-const removePeerReferences = async (peerId,peers) => {
-
-    let pIds = Object.keys(peers);
-
-    for(let i=0; i < pIds.length; i++){
-
-        let currPeer = peers[pIds[i]];
-
-        await memoryDBAPI.updateMergeById("session_peers",data.userId, {
-            assignedSFU: lastSFU.id
-        });
-    }
-    pIds.forEach( e => {
-
-    });
-
 }
 
 const timeout = (millis) => {
@@ -474,10 +450,10 @@ const removePeerFromSession = async (roomId, peerId) => {
     if(currSession){
 
         let peers = await memoryDBAPI.queryCollection("session_peers", [{ "field": "session_id", "operator": "==", "value": roomId }]);
-        console.log("lo que trae ",{peers:peers,peerId: peerId,roomId:roomId});
+        logger.info("lo que trae ",{peers:peers,peerId: peerId,roomId:roomId});
 
         if(!peers[peerId]){
-            console.warn("removePeerFromSession -- leaving peer Id not found in peers object ",{peers:peers,peerId: peerId,roomId:roomId});
+            logger.warn("removePeerFromSession -- leaving peer Id not found in peers object ",{peers:peers,peerId: peerId,roomId:roomId});
             return true;
         }
 
@@ -506,7 +482,7 @@ const removePeerFromSession = async (roomId, peerId) => {
                 });
 
             }else{
-                console.warn("removePeerFromSession -- could not find a new main presenter! session has no more presenters?",{peers:peers,leavingPeer: leavingPeer});   
+                logger.warn("removePeerFromSession -- could not find a new main presenter! session has no more presenters?",{peers:peers,leavingPeer: leavingPeer});   
             }
         }
 
@@ -522,7 +498,7 @@ const removePeerFromSession = async (roomId, peerId) => {
             
             let targetSocketId ;
 
-            console.debug("removePeerFromSession -- the leaving peer is an SFU. "+
+            logger.debug("removePeerFromSession -- the leaving peer is an SFU. "+
                 " Sending assigned_sfu_disconnected to all peers that have this leaving peer as SFU",
                 {
                     peers:peers,
@@ -535,7 +511,7 @@ const removePeerFromSession = async (roomId, peerId) => {
 
             let newAssignedSFU;
 
-            console.debug("removePeerFromSession -- leaving peer's assignedPeers ",{leavingPeer,ap: leavingPeer.assignedPeers});
+            logger.debug("removePeerFromSession -- leaving peer's assignedPeers ",{leavingPeer,ap: leavingPeer.assignedPeers});
 
             if(leavingPeer.assignedPeers){
 
@@ -547,7 +523,7 @@ const removePeerFromSession = async (roomId, peerId) => {
                     let peer = peers[p];
 
                     targetSocketId = socketIdMapping[p];
-                    console.debug("removePeerFromSession -- this peer has the leaving peer "+
+                    logger.debug("removePeerFromSession -- this peer has the leaving peer "+
                     "as its SFU, so it needs to ask for a new one",
                     {
                         peerId: p,
@@ -559,7 +535,7 @@ const removePeerFromSession = async (roomId, peerId) => {
                         if(pId !== p){
                             targetSocketId = socketIdMapping[pId];
                         
-                            console.debug("removePeerFromSession -- sending peer_streams_remove_request  ",
+                            logger.debug("removePeerFromSession -- sending peer_streams_remove_request  ",
                             {
                                 pId:pId,
                                 peerId: p,
@@ -583,7 +559,7 @@ const removePeerFromSession = async (roomId, peerId) => {
 
                     let assignedPeerStreams = peers[p] ? peers[p].localStreams : {};
                     if(assignedPeerStreams){
-                        console.debug("removePeerFromSession -- removing references of assigned peer's stream",{
+                        logger.debug("removePeerFromSession -- removing references of assigned peer's stream",{
                             assignedPeerId: p
                         });
 
@@ -627,7 +603,7 @@ const removePeerFromSession = async (roomId, peerId) => {
 
                     newAssignedSFU = await pickSFU(peer,roomId,p,leavingPeer.id);
 
-                    console.debug("removePeerFromSession -- the result when asking for a new SFU ",
+                    logger.debug("removePeerFromSession -- the result when asking for a new SFU ",
                     {
                         peerId: p,
                         newAssignedSFU:newAssignedSFU,
@@ -658,7 +634,7 @@ const removePeerFromSession = async (roomId, peerId) => {
 
             
                     }else{
-                        console.warn("removePeerFromSession -- no candidate SFU found in the room!",{peer:peer,roomId:roomId,peers:peers});
+                        logger.warn("removePeerFromSession -- no candidate SFU found in the room!",{peer:peer,roomId:roomId,peers:peers});
                         io.to(targetSocketId).emit("sfu_not_found");
                     }
 
@@ -684,7 +660,7 @@ const removePeerFromSession = async (roomId, peerId) => {
                     let peer = peers[p];
                     if(peer.assignedSFU && peers[peer.assignedSFU]){
                         
-                        console.debug("removePeerFromSession -- sending sfu_assigned to peer ",
+                        logger.debug("removePeerFromSession -- sending sfu_assigned to peer ",
                         {
                             peerId: p,
                             newAssignedSFU:peer.assignedSFU,
@@ -698,7 +674,7 @@ const removePeerFromSession = async (roomId, peerId) => {
                         });
 
                     }else{
-                        console.debug("removePeerFromSession -- could not find the assigned SFU for this peer ",
+                        logger.debug("removePeerFromSession -- could not find the assigned SFU for this peer ",
                         {
                             peerId: p,
                             newAssignedSFU:peer.assignedSFU,
@@ -722,7 +698,7 @@ const removePeerFromSession = async (roomId, peerId) => {
                     //     return !peers[p].sfu;
                     // });
 
-                    console.debug("removePeerFromSession -- processing non SFUs only",
+                    logger.debug("removePeerFromSession -- processing non SFUs only",
                     {leavingPeerId:leavingPeer.id,nonSFUIds:peerIds});
 
                     for (let x = 0; x < peerIds.length; x++) {
@@ -737,7 +713,7 @@ const removePeerFromSession = async (roomId, peerId) => {
                                 
                                 let downstreamsFromSFU = peerDownstreams[leavingPeer.id];
             
-                                console.debug("removePeerFromSession -- found peer with downstreams from leaving SFU",
+                                logger.debug("removePeerFromSession -- found peer with downstreams from leaving SFU",
                                 {peerId: pId, leavingPeerId:leavingPeer.id,downstreams:downstreamsFromSFU});
             
             
@@ -754,14 +730,14 @@ const removePeerFromSession = async (roomId, peerId) => {
 
                                     let notIncludedInAssignedPeers = assignedPeers.indexOf(origin.originPeerId) === -1;
             
-                                    console.debug("removePeerFromSession -- not included in assignedPeers? (1)",
+                                    logger.debug("removePeerFromSession -- not included in assignedPeers? (1)",
                                     {assignedPeers,originPeerId: origin.originPeerId, leavingPeerId:leavingPeer.id,
                                         notIncludedInAssignedPeers});
                                     
 
                                     if(notIncludedInAssignedPeers && origin.originPeerId !== leavingPeer.id){
                                         
-                                        console.debug("removePeerFromSession -- sending peer_streams_remove_request  ",
+                                        logger.debug("removePeerFromSession -- sending peer_streams_remove_request  ",
                                         {
                                             pId:pId,
                                             peerIdRemove: origin.originPeerId,
@@ -788,12 +764,12 @@ const removePeerFromSession = async (roomId, peerId) => {
 
                                         let brokenUpstreamPeerIds = session.getUpstreamPeerIds(peers,pId,origin.originStreamId);
                                         
-                                        console.log("removePeerFromSession -- el resultado de brokenUpstreamPeerIds ",{brokenUpstreamPeerIds});
+                                        logger.info("removePeerFromSession -- el resultado de brokenUpstreamPeerIds ",{brokenUpstreamPeerIds});
                                         brokenUpstreamPeerIds = brokenUpstreamPeerIds.filter(b => {
                                             return b !== leavingPeer.id;
                                         });
 
-                                        console.log("removePeerFromSession -- el resultado de brokenUpstreamPeerIds liuego del filtro ",{pId,leavingPeerId: leavingPeer.id,brokenUpstreamPeerIds});
+                                        logger.info("removePeerFromSession -- el resultado de brokenUpstreamPeerIds liuego del filtro ",{pId,leavingPeerId: leavingPeer.id,brokenUpstreamPeerIds});
                                         let brokenPeerSockId ;
 
                                         for (let z = 0; z < brokenUpstreamPeerIds.length; z++) {
@@ -828,7 +804,7 @@ const removePeerFromSession = async (roomId, peerId) => {
                                                 //resend:true
                                             });
 
-                                            console.log("removePeerFromSession -- estado final de peers",{peers});
+                                            logger.info("removePeerFromSession -- estado final de peers",{peers});
                                             
                                         }
 
@@ -846,7 +822,7 @@ const removePeerFromSession = async (roomId, peerId) => {
         
                     }
 
-                    console.log("removePeerFromSession -- comparacion peers oldpeers",{peers,oldPeers});
+                    logger.info("removePeerFromSession -- comparacion peers oldpeers",{peers,oldPeers});
 
                     await timeout(2000);
 
@@ -854,7 +830,7 @@ const removePeerFromSession = async (roomId, peerId) => {
                     peerIds = Object.keys(oldPeers);
                     //loop for sfu only peers
 
-                    console.debug("removePeerFromSession -- processing old peers",
+                    logger.debug("removePeerFromSession -- processing old peers",
                     {leavingPeerId:leavingPeer.id,peerIds});
 
                     for (let x = 0; x < peerIds.length; x++) {
@@ -869,7 +845,7 @@ const removePeerFromSession = async (roomId, peerId) => {
                                 
                                 let downstreamsFromSFU = peerDownstreams[leavingPeer.id];
             
-                                console.debug("removePeerFromSession -- found peer with downstreams from leaving SFU",
+                                logger.debug("removePeerFromSession -- found peer with downstreams from leaving SFU",
                                 {peerId: pId, leavingPeerId:leavingPeer.id,downstreams:downstreamsFromSFU});
             
             
@@ -886,14 +862,14 @@ const removePeerFromSession = async (roomId, peerId) => {
 
                                     let notIncludedInAssignedPeers = assignedPeers.indexOf(origin.originPeerId) === -1;
             
-                                    console.debug("removePeerFromSession -- not included in assignedPeers? (1)",
+                                    logger.debug("removePeerFromSession -- not included in assignedPeers? (1)",
                                     {assignedPeers,originPeerId: origin.originPeerId, leavingPeerId:leavingPeer.id,
                                         notIncludedInAssignedPeers});
                                     
 
                                     if(notIncludedInAssignedPeers && origin.originPeerId !== leavingPeer.id){
                                         
-                                        console.debug("removePeerFromSession -- sending peer_streams_remove_request  ",
+                                        logger.debug("removePeerFromSession -- sending peer_streams_remove_request  ",
                                         {
                                             pId:pId,
                                             peerIdRemove: origin.originPeerId,
@@ -909,7 +885,7 @@ const removePeerFromSession = async (roomId, peerId) => {
                                             sessionId: roomId
                                         };
             
-                                        console.log("removePeerFromSession -- sending request_stream message to this peer",{
+                                        logger.info("removePeerFromSession -- sending request_stream message to this peer",{
                                             peerId:pId,
                                             origin: origin,
                                             rsData:rsData
@@ -929,135 +905,10 @@ const removePeerFromSession = async (roomId, peerId) => {
         
                     }
 
-
-                    // await timeout(2000);
-                
-                    // peerIds = Object.keys(oldPeers).filter( p => {
-                    //     return oldPeers[p].sfu;
-                    // });
-
-                    // //ask for those broker upstream peers
-
-                    // console.debug("removePeerFromSession -- asking for broken relay streams again",
-                    // {leavingPeerId:leavingPeer.id,peerIds:peerIds});
-
-                    // for (let x = 0; x < peerIds.length; x++) {
-
-                    //     let pId = peerIds[x];
-
-                    //         peerDownstreams = oldPeers[pId].downstream;
-            
-                    //         targetSocketId = socketIdMapping[pId];
-            
-                    //         if(peerDownstreams && peerDownstreams[leavingPeer.id]){
-                                
-                    //             let downstreamsFromSFU = peerDownstreams[leavingPeer.id];
-            
-                    //             console.debug("removePeerFromSession -- found peer with downstreams from leaving SFU",
-                    //             {peerId: pId, leavingPeerId:leavingPeer.id,downstreams:downstreamsFromSFU});
-            
-            
-                    //             let streamIds = Object.keys(downstreamsFromSFU);
-            
-                    //             for (let y = 0; y < streamIds.length; y++) {
-                    //                 let s = streamIds[y];
-            
-                    //                 let origin = downstreamsFromSFU[s];
-            
-                    //                 //exclude the current assignedPeer(var p) from downstreamsFromSSU  
-                    //                 //as this peer is already being retransmitted by the SFUs when sending
-                    //                 //its stream to its new assigned SFU
-
-                    //                 let notIncludedInAssignedPeers = assignedPeers.indexOf(origin.originPeerId) === -1;
-            
-                    //                 console.debug("removePeerFromSession -- not included in assignedPeers? (1)",
-                    //                 {assignedPeers,originPeerId: origin.originPeerId, leavingPeerId:leavingPeer.id,
-                    //                     notIncludedInAssignedPeers});
-                                    
-
-                    //                 if(notIncludedInAssignedPeers && origin.originPeerId !== leavingPeer.id){
-
-
-                    //                     let brokenUpstreamPeerIds = session.getUpstreamPeerIds(oldPeers,pId,origin.originStreamId);
-                                        
-                    //                     console.log("removePeerFromSession -- el resultado de brokenUpstreamPeerIds ",{brokenUpstreamPeerIds});
-                    //                     brokenUpstreamPeerIds = brokenUpstreamPeerIds.filter(b => {
-                    //                         return b !== leavingPeer.id && oldPeers[b].assignedSFU !== pId;
-                    //                     });
-
-                    //                     console.log("removePeerFromSession -- el resultado de brokenUpstreamPeerIds liuego del filtro ",{pId,leavingPeerId: leavingPeer.id,brokenUpstreamPeerIds,oldPeers});
-                    //                     let brokenPeerSockId ;
-
-                    //                     for (let z = 0; z < brokenUpstreamPeerIds.length; z++) {
-                                            
-                    //                         let b = brokenUpstreamPeerIds[z];
-
-                    //                         delete peers[b].downstream[pId][origin.originStreamId];
-
-                    //                         delete peers[pId].upstream[b][origin.originStreamId];
-
-                    //                         await memoryDBAPI.updateMergeById("session_peers",b, {
-                    //                             downstream: peers[b].downstream
-                    //                         });
-
-                    //                         await memoryDBAPI.updateMergeById("session_peers",pId, {
-                    //                             upstream: peers[pId].upstream
-                    //                         });
-                                            
-                    //                         brokenPeerSockId = socketIdMapping[b];
-
-                    //                         let rsData = {
-                    //                             targetPeerId: origin.originPeerId,
-                    //                             targetStreamId: origin.originStreamId,
-                    //                             sessionId: roomId
-                    //                         };
-                
-                    //                         console.log("removePeerFromSession -- sending request_stream message to this peer",{
-                    //                             peerToSend:b,
-                    //                             peerId:pId,
-                    //                             origin: origin,
-                    //                             rsData:rsData
-                    //                         });
-                
-                    //                         io.to(brokenPeerSockId).emit("request_stream", rsData);
-
-                    //                         // io.to(brokenPeerSockId).emit("peer_streams_remove_request", {
-                    //                         //     peerId: origin.originPeerId,
-                    //                         //     streamId: origin.originStreamId,
-                    //                         //     //resend:true
-                    //                         // });
-
-                    //                         console.log("removePeerFromSession -- estado final de peers",{peers});
-                                            
-                    //                     }
-
-            
-                                        
-                    //                 }
-            
-                                    
-                    //             }
-                                
-                    //         }
-
-        
-                        
-        
-                    // }
-
-
-
             }else{
-                console.debug("removePeerFromSession -- no assignedPeers for this leaving SFU",{leavingSFU: leavingPeer});
+                logger.debug("removePeerFromSession -- no assignedPeers for this leaving SFU",{leavingSFU: leavingPeer});
             }
 
-            // peerIds = peerIds.filter(p => {
-            //     return peers[p].sfu 
-            // });
-
-
-            
-            
         }
     }
 
@@ -1085,7 +936,7 @@ const getAssignedPeersPerSFU = (peerId,sessionPeers) => {
         }
     });
 
-    console.log("getAssignedPeersPerSFU -- filtered as SFUs",{sfus:sfus});
+    logger.info("getAssignedPeersPerSFU -- filtered as SFUs",{sfus:sfus});
 
     // Object.keys(sessionPeers).forEach(p => {
 
@@ -1119,7 +970,7 @@ const getAssignedPeersPerSFU = (peerId,sessionPeers) => {
         
     })
 
-    console.log("getAssignedPeersPerSFU -- finished counting assigned peers per SFU",{sfus:sfus});
+    logger.info("getAssignedPeersPerSFU -- finished counting assigned peers per SFU",{sfus:sfus});
 
     return sfus;
 }
@@ -1186,7 +1037,7 @@ const pickSFU = async (peer,roomId,userId,excludedPeerId) => {
         //getConnectedStreamsPerSFU(data.userId,sessionPeers);
        
 
-        console.log("pickSFU -- session peers con dos filtros",{peers:sessionPeers});
+        logger.info("pickSFU -- session peers con dos filtros",{peers:sessionPeers});
 
         if(sessionPeers && Object.keys(sessionPeers).length > 0){
 
@@ -1206,7 +1057,7 @@ const pickSFU = async (peer,roomId,userId,excludedPeerId) => {
         //getConnectedStreamsPerSFU(data.userId,sessionPeers);
         let peersPerSFU = getAssignedPeersPerSFU(userId,sessionPeers);
 
-        console.log("pickSFU -- peersPerSFU",{peersPerSFU:peersPerSFU});
+        logger.info("pickSFU -- peersPerSFU",{peersPerSFU:peersPerSFU});
 
         if(peersPerSFU && peersPerSFU.length > 0){
             
@@ -1235,11 +1086,11 @@ const pickSFU = async (peer,roomId,userId,excludedPeerId) => {
 
 
 io.on("connection", (socket) => {
-    console.log("socket connected " + socket.handshake.query.peer_id + " " + socket.id);
+    logger.info("socket connected " + socket.handshake.query.peer_id + " " + socket.id);
     
     if(disconnectionTimeouts[socket.handshake.query.peer_id]){
         
-        console.log("socket connected -- clearing disconnection timeout previously set" 
+        logger.info("socket connected -- clearing disconnection timeout previously set" 
         ,{peerId: socket.handshake.query.peer_id,socketId: socket.id,
         roomId: socket.handshake.query.room_id});
 
@@ -1253,7 +1104,7 @@ io.on("connection", (socket) => {
     socketIdMapping[socket.handshake.query.peer_id] = socket.id;
 
     socket.on("username", async (data,callback) => {
-        console.debug("username -- starting ",{data:data});
+        logger.debug("username -- starting ",{data:data});
         let result = {
             type:"error",
             message:"SESSION_NOT_FOUND"
@@ -1262,7 +1113,7 @@ io.on("connection", (socket) => {
         let peers = await memoryDBAPI.queryCollection("session_peers", [
             { "field": "userName", "operator": "==", "value": data.userName }
         ]);
-        console.log("el resultado de buscar el peer con el mismo nombre ",{p:peer});
+        logger.info("el resultado de buscar el peer con el mismo nombre ",{p:peer});
         if(peers && Object.keys(peers).length > 0){
             result = {
                 type:"error",
@@ -1281,7 +1132,7 @@ io.on("connection", (socket) => {
 
     socket.on("get_target_sfu", async data => {
        
-        console.log("get_target_sfu -- starting...", { data: data });
+        logger.info("get_target_sfu -- starting...", { data: data });
 
         let peer = await memoryDBAPI.findById("session_peers", data.userId);
 
@@ -1305,7 +1156,7 @@ io.on("connection", (socket) => {
 
             let nuevaSelSFU = await memoryDBAPI.findById("session_peers",assignedSFU.id);
 
-            console.log("como queda la assignedSFU SFU",{assignedSFU,nuevaSelSFU});
+            logger.info("como queda la assignedSFU SFU",{assignedSFU,nuevaSelSFU});
     
             io.in(data.roomId).emit("sfu_assigned", {
                 userId: data.userId,
@@ -1313,7 +1164,7 @@ io.on("connection", (socket) => {
             });
 
         }else{
-            console.warn("get_target_sfu -- could not find a candidate SFU for this peer!", { data: data,peer:peer});
+            logger.warn("get_target_sfu -- could not find a candidate SFU for this peer!", { data: data,peer:peer});
             io.to(socket.id).emit("sfu_not_found");
         }
 
@@ -1322,7 +1173,7 @@ io.on("connection", (socket) => {
 
     socket.on("set_target_sfu", async data => {
        
-        console.log("entering set_target_sfu", { data: data });
+        logger.info("entering set_target_sfu", { data: data });
 
         let selectedSFU = await memoryDBAPI.findById("session_peers",data.selectedSFU);
 
@@ -1344,7 +1195,7 @@ io.on("connection", (socket) => {
 
         let nuevaSelSFU = await memoryDBAPI.findById("session_peers",selectedSFU.id);
 
-        console.log("como queda la selected SFU",{selectedSFU,nuevaSelSFU});
+        logger.info("como queda la selected SFU",{selectedSFU,nuevaSelSFU});
 
         io.to(socket.id).emit("sfu_assigned", {
             userId: data.userId,
@@ -1354,19 +1205,19 @@ io.on("connection", (socket) => {
     });
 
     socket.on("message", (data) => {
-        console.log("el message que viene", { data: data });
+        logger.info("el message que viene", { data: data });
         io.in(data.roomId).emit("message", data);
     });
 
     socket.on("create_sub_room", (data) => {
-        console.log("create_sub_room ", { data: data });
+        logger.info("create_sub_room ", { data: data });
         io.in(data.roomId).emit("create_sub_room", data);
     });
 
     socket.on("join", async (data, callback) => {
-        console.log("iniciando join", { data: data });
+        logger.info("iniciando join", { data: data });
         let session = await memoryDBAPI.findById("sessions", data.roomId);
-        console.log("valor sessions", { session: session });
+        logger.info("valor sessions", { session: session });
         let sessionStarted = false;
         let setAsOwner = false;
         if (!session) {
@@ -1429,7 +1280,7 @@ io.on("connection", (socket) => {
                 let participants = Object.keys(peers).length;
 
                 if(participants === session.maxPeers){
-                    console.warn("join -- this peer cannot enter the room. The room reached max peers limit",{session,userData:data.userData});
+                    logger.warn("join -- this peer cannot enter the room. The room reached max peers limit",{session,userData:data.userData});
 
                     callback({
                         result: "error",
@@ -1439,20 +1290,20 @@ io.on("connection", (socket) => {
                     return false;
                 }
 
-                console.log("join -- this room is a small room",{session});
+                logger.info("join -- this room is a small room",{session});
 
                 let hasOwner = await memoryDBAPI.queryCollection("session_peers", [
                     { "field": "session_id", "operator": "==", "value": data.roomId },
                     { "field": "owner", "operator": "==", "value": true }
                 ]);
 
-                console.log("join -- checking if this small room already has an assigned Owner",{hasOwner});
+                logger.info("join -- checking if this small room already has an assigned Owner",{hasOwner});
 
                 if(!hasOwner){
-                    console.log("join -- setting this peer as owner as this room has no owner yet",{hasOwner});
+                    logger.info("join -- setting this peer as owner as this room has no owner yet",{hasOwner});
                     setAsOwner = true;
                 }else{
-                    console.log("join -- this room already has an owner..skipping",{hasOwner});
+                    logger.info("join -- this room already has an owner..skipping",{hasOwner});
                 }
 
             }
@@ -1471,8 +1322,8 @@ io.on("connection", (socket) => {
 
 
 
-        // console.log("join!");
-        // console.log(data);
+        // logger.info("join!");
+        // logger.info(data);
         socket.join(data.roomId);
         data.session_id = data.roomId;
         data.signaling_id = socket.id;
@@ -1505,7 +1356,7 @@ io.on("connection", (socket) => {
         //condition the SFU capability to whether the device is mobile or not
         sessionPeer.sfu = !data.userData.isMobileDevice ? result.sfu : false;
 
-        console.log("el result de la capacidad!",{
+        logger.info("el result de la capacidad!",{
             peerId:data.userId,
             cap:data.userData.capabilities,
             assessResult: result
@@ -1523,7 +1374,7 @@ io.on("connection", (socket) => {
         }
         
 
-        console.log("la info del peer",{peer:sessionPeer});
+        logger.info("la info del peer",{peer:sessionPeer});
 
         let mainPresenter = await memoryDBAPI.queryCollection("session_peers", [
             { "field": "session_id", "operator": "==", "value": data.roomId },
@@ -1531,17 +1382,17 @@ io.on("connection", (socket) => {
             { "field": "mainPresenter", "operator": "==", "value": true }
         ]);
 
-        console.log("el resultado de main presenter", { mp: mainPresenter });
+        logger.info("el resultado de main presenter", { mp: mainPresenter });
 
         if (mainPresenter && Object.keys(mainPresenter).length > 0) {
-            console.log("ya existe un main presenter para esta sesión", { sessionId: data.roomId, mainPresenter: mainPresenter });
+            logger.info("ya existe un main presenter para esta sesión", { sessionId: data.roomId, mainPresenter: mainPresenter });
         } else if (sessionPeer.presenter) {
-            console.log("No encontró main presenter para esta sesión asi que asigna a este presenter como main", { sessionId: data.roomId, mainPresenter: mainPresenter });
+            logger.info("No encontró main presenter para esta sesión asi que asigna a este presenter como main", { sessionId: data.roomId, mainPresenter: mainPresenter });
             sessionPeer.mainPresenter = true;
         }
 
-        // console.log("el session peer");
-        // console.log(sessionPeer);
+        // logger.info("el session peer");
+        // logger.info(sessionPeer);
 
         await memoryDBAPI.insert("session_peers", data.userId, sessionPeer);
         //let peers = await memoryDBAPI.getAll("session_peers");
@@ -1550,7 +1401,7 @@ io.on("connection", (socket) => {
             { "field": "session_id", "operator": "==", "value": data.roomId }
         ]);
 
-        console.log("los peers que va a mandar user_joined",{peers:peers});
+        logger.info("los peers que va a mandar user_joined",{peers:peers});
         Object.keys(peers).forEach(pId => {
             io.to(socketIdMapping[pId]).emit("user_joined", sessionPeer);
 
@@ -1560,11 +1411,11 @@ io.on("connection", (socket) => {
             return peers[p].sfu
         }).length;
 
-        console.log("join -- number of SFUs in the room",{num:numOfSFUs});
+        logger.info("join -- number of SFUs in the room",{num:numOfSFUs});
 
         session.numOfSFUs = numOfSFUs;
         session.participants = Object.keys(peers).length;
-        console.log("sending room info event", { session: session });
+        logger.info("sending room info event", { session: session });
         socket.broadcast.emit("room_info", session);
 
         callback({
@@ -1579,7 +1430,7 @@ io.on("connection", (socket) => {
 
     socket.on("peer_score_requested", async data => {
 
-        console.log("peer_score_requested -- starting ",{data:data});
+        logger.info("peer_score_requested -- starting ",{data:data});
         let assessment = {
             capabilities:{}
         };
@@ -1597,7 +1448,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on("room_info", async data => {
-        console.debug("room_info -- starting ",{data:data});
+        logger.debug("room_info -- starting ",{data:data});
 
         let session = await memoryDBAPI.findById("sessions", data.roomId);
         if(session){
@@ -1609,7 +1460,7 @@ io.on("connection", (socket) => {
                 return peers[p].sfu
             }).length;
     
-            console.log("room_info -- number of SFUs in the room",{num:numOfSFUs});
+            logger.info("room_info -- number of SFUs in the room",{num:numOfSFUs});
             session.participants = Object.keys(peers).length;
             session.numOfSFUs = numOfSFUs;
         }
@@ -1621,7 +1472,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on("peer_media_changed", async data => {
-        console.log("peer_media_changed -- starting",{data:data});
+        logger.info("peer_media_changed -- starting",{data:data});
 
         let peers = await memoryDBAPI.queryCollection("session_peers", [
             { "field": "session_id", "operator": "==", "value": data.sessionId }
@@ -1643,12 +1494,12 @@ io.on("connection", (socket) => {
             break;
             case "deleted": 
                 delete peer.localStreams[data.streamId];
-                console.log("peer_media_changed -- removing stream references",{peers:JSON.stringify(peers),peerId:peer.id,streamId:data.streamId})
+                logger.info("peer_media_changed -- removing stream references",{peers:JSON.stringify(peers),peerId:peer.id,streamId:data.streamId})
                 session.removePeerStreamReferences(peers,peer.id,data.streamId);
 
                 updated = true;
             break;
-            default: console.log("Unknown peer media changed type: "+data.type,{data:data});
+            default: logger.info("Unknown peer media changed type: "+data.type,{data:data});
         }
 
         if(updated){
@@ -1691,7 +1542,7 @@ io.on("connection", (socket) => {
 
     socket.on("user_presentation_request", async data => {
 
-        console.log("entering user_presentation_request!", { data: data });
+        logger.info("entering user_presentation_request!", { data: data });
 
         let peers = await memoryDBAPI.queryCollection("session_peers", [
             { "field": "session_id", "operator": "==", "value": data.roomId },
@@ -1708,7 +1559,7 @@ io.on("connection", (socket) => {
 
     socket.on("user_presentation_cancelled", async data => {
 
-        console.log("entering peer_presentation_cancelled!", { data: data });
+        logger.info("entering peer_presentation_cancelled!", { data: data });
 
         await memoryDBAPI.updateMergeById("session_peers", data.userId, { presenter: false });
         socket.to(socket.handshake.query.room_id).emit("user_presentation_cancelled", { userId: data.userId });
@@ -1717,7 +1568,7 @@ io.on("connection", (socket) => {
 
     socket.on("user_presentation_granted", async data => {
 
-        console.log("entering user_presentation_granted!", { data: data });
+        logger.info("entering user_presentation_granted!", { data: data });
 
         await memoryDBAPI.updateMergeById("session_peers", data.target, { presenter: true, canStream: true });
 
@@ -1729,13 +1580,13 @@ io.on("connection", (socket) => {
             { "field": "session_id", "operator": "==", "value": data.roomId }
         ]);
 
-        console.log("los simplepeers", { destPeers: destPeers, peer: peer });
+        logger.info("los simplepeers", { destPeers: destPeers, peer: peer });
 
         Object.keys(destPeers).forEach(sp => {
 
             //send to all except the peer that has been promoted to presenter and the owner who granted the role
             if (sp !== peer.id && sp !== socket.handshake.query.peer_id) {
-                console.log("enviando a " + sp);
+                logger.info("enviando a " + sp);
                 io.to(socketIdMapping[sp]).emit("new_presenter", peer);
             }
         });
@@ -1744,7 +1595,7 @@ io.on("connection", (socket) => {
 
     socket.on("peer_camera_state_changed", async data => {
 
-        console.log("entering peer_camera_state_changed!", { data: data });
+        logger.info("entering peer_camera_state_changed!", { data: data });
 
         await memoryDBAPI.updateMergeById("session_peers", data.peerId, { camera: data.enabled });
 
@@ -1754,7 +1605,7 @@ io.on("connection", (socket) => {
 
     socket.on("peer_mic_state_changed", async data => {
 
-        console.log("entering peer_mic_state_changed!", { data: data });
+        logger.info("entering peer_mic_state_changed!", { data: data });
 
         await memoryDBAPI.updateMergeById("session_peers", data.peerId, { mic: data.mic });
 
@@ -1764,7 +1615,7 @@ io.on("connection", (socket) => {
 
     socket.on("user_presentation_removed", async data => {
 
-        console.log("entering user_presentation_removed!", { data: data });
+        logger.info("entering user_presentation_removed!", { data: data });
 
         await memoryDBAPI.updateMergeById("session_peers", data.target, { presenter: false });
 
@@ -1774,14 +1625,14 @@ io.on("connection", (socket) => {
 
     socket.on("peer_connection_failed", async data => {
 
-        console.log("entering peer_connection_failed!", { data: data });
+        logger.info("entering peer_connection_failed!", { data: data });
 
 
     });
 
     socket.on("peer_connection_succeeded", async data => {
 
-        console.log("event on peer_connection_succeeded!", { data: data });
+        logger.info("event on peer_connection_succeeded!", { data: data });
         let peer = await memoryDBAPI.findById("session_peers", data.from);
         let connectedPeers = peer.connectedPeers || {};
         if (!connectedPeers[data.originPeerId]) {
@@ -1806,7 +1657,7 @@ io.on("connection", (socket) => {
         await memoryDBAPI.updateMergeById("session_peers", data.from, { connectedPeers: connectedPeers });
 
         let peerAfter = await memoryDBAPI.findById("session_peers", data.from);
-        console.log("peer state after processing peer_connection_succeeded", { peerAfter: peerAfter });
+        logger.info("peer state after processing peer_connection_succeeded", { peerAfter: peerAfter });
 
     });
 
@@ -1818,7 +1669,7 @@ io.on("connection", (socket) => {
          */
 
         
-        console.log("peer_stream_removed -- starting", { data: data });
+        logger.info("peer_stream_removed -- starting", { data: data });
 
         let peers = await memoryDBAPI.queryCollection("session_peers", [
             { "field": "session_id", "operator": "==", "value": data.sessionId }
@@ -1844,7 +1695,7 @@ io.on("connection", (socket) => {
         }); 
 
        
-        console.log("peer_stream_removed -- finished", { peer: peers[data.from] });
+        logger.info("peer_stream_removed -- finished", { peer: peers[data.from] });
 
 
     });
@@ -1855,12 +1706,12 @@ io.on("connection", (socket) => {
          * This can be triggered when a peer detects a source peer has disconnected.
          * 
          */
-        console.log("entering stream_source_request!", { data: data });
+        logger.info("entering stream_source_request!", { data: data });
 
     });
 
     socket.on("peer_webrtc_message", async data => {
-        // console.log("peer_webrtc_message",{data:data});
+        // logger.info("peer_webrtc_message",{data:data});
         let targetSocketId = socketIdMapping[data.target];
 
         delete data["target"];
@@ -1872,26 +1723,26 @@ io.on("connection", (socket) => {
     });
 
     socket.on("peer_stream_loaded", async data => {
-        // console.log("peer_webrtc_message",{data:data});
-        console.log("peer_stream_loaded -- starting...",{data:data});
+        // logger.info("peer_webrtc_message",{data:data});
+        logger.info("peer_stream_loaded -- starting...",{data:data});
 
         let originPeer = await memoryDBAPI.findById("session_peers",data.originPeerId);
 
 
         if(!originPeer){
-            console.log("peer_stream_loaded -- could not find originPeer!",{data:data});
+            logger.info("peer_stream_loaded -- could not find originPeer!",{data:data});
             return false;
         }
 
         let fromPeer = await memoryDBAPI.findById("session_peers",data.peerId);
 
         if(!fromPeer){
-            console.log("peer_stream_loaded -- could not find fromPeer!",{data:data});
+            logger.info("peer_stream_loaded -- could not find fromPeer!",{data:data});
             return false;
         }
 
 
-        console.log("peer_stream_loaded -- originPeer",{originPeer:originPeer,fromPeer:fromPeer});
+        logger.info("peer_stream_loaded -- originPeer",{originPeer:originPeer,fromPeer:fromPeer});
         
         let peers = await memoryDBAPI.queryCollection("session_peers", [
             { "field": "session_id", "operator": "==", "value": data.sessionId }
@@ -1907,11 +1758,11 @@ io.on("connection", (socket) => {
             }
         });
 
-        console.log("peer_stream_loaded -- first filtering of peers to send request",{data,peers:JSON.parse(JSON.stringify(peers)),filteredPeerIds});
+        logger.info("peer_stream_loaded -- first filtering of peers to send request",{data,peers:JSON.parse(JSON.stringify(peers)),filteredPeerIds});
 
         //filter out non presenter viewers if origin peer is not a presenter
         if(!originPeer.presenter){
-            console.log("peer_stream_loaded -- origin peer is not a presenter... exclude other non presenters from filteredPeerIds",{data,peers:JSON.parse(JSON.stringify(peers)),filteredPeerIds,originPeer});
+            logger.info("peer_stream_loaded -- origin peer is not a presenter... exclude other non presenters from filteredPeerIds",{data,peers:JSON.parse(JSON.stringify(peers)),filteredPeerIds,originPeer});
             filteredPeerIds = filteredPeerIds.filter(p => {
                 if(peers[p].presenter){
                     return true;
@@ -1919,7 +1770,7 @@ io.on("connection", (socket) => {
                     return false;
                 }
             });
-            console.log("peer_stream_loaded -- second filtering of peers to send request (originPeer is not a presenter)",{filteredPeerIds:filteredPeerIds});
+            logger.info("peer_stream_loaded -- second filtering of peers to send request (originPeer is not a presenter)",{filteredPeerIds:filteredPeerIds});
         }   
         //let currConnPeers = (peers[data.peerId].totalConnectedStreams ? peers[data.peerId].totalConnectedStreams.length : 0);
 
@@ -1941,13 +1792,13 @@ io.on("connection", (socket) => {
         let numDownstreamPeers = countDownstreamPeers(peers[data.peerId].downstream);
 
         if(numDownstreamPeers >= peers[data.peerId].capabilities.maxConnectedPeers){
-            console.warn("peer_stream_loaded -- max connected peers reached!");
+            logger.warn("peer_stream_loaded -- max connected peers reached!");
         }
 
         if(fromPeer.sfu){
 
             let remainingPeerCapacity = peers[data.peerId].capabilities.maxConnectedPeers - numDownstreamPeers;
-            console.log("peer_stream_loaded -- la capacidad calculada que le queda al peer ",{
+            logger.info("peer_stream_loaded -- la capacidad calculada que le queda al peer ",{
                 remainingPeerCapacity:remainingPeerCapacity,
                 peerId:data.peerId,
                 maxConnectedPeers: peers[data.peerId].capabilities.maxConnectedPeers,
@@ -1959,7 +1810,7 @@ io.on("connection", (socket) => {
                 let targetSFU = peers[fromPeer.assignedSFU];
 
                 if(targetSFU){
-                    console.log("peer_stream_loaded -- is this stream and peer not yet loaded? ",{targetSFU:targetSFU,originPeerId:data.originPeerId,originStreamId:data.originStreamId});
+                    logger.info("peer_stream_loaded -- is this stream and peer not yet loaded? ",{targetSFU:targetSFU,originPeerId:data.originPeerId,originStreamId:data.originStreamId});
                     let streamAlreadyLoadedInSFU = peer.streamAlreadyLoaded(targetSFU,data.originPeerId,data.originStreamId);
         
                     if(!streamAlreadyLoadedInSFU){
@@ -1974,20 +1825,20 @@ io.on("connection", (socket) => {
                             sessionId: data.sessionId
                         };
             
-                        console.log("peer_stream_loaded -- sending request_stream event to sender's SFU",
+                        logger.info("peer_stream_loaded -- sending request_stream event to sender's SFU",
                         {fromPeer:fromPeer,sfu:fromPeer.assignedSFU,rsData:rsData});
             
                         io.to(sfuSockId).emit("request_stream", rsData);
                     }else{
 
-                        console.log("peer_stream_loaded -- stream already loaded in sender's SFU",
+                        logger.info("peer_stream_loaded -- stream already loaded in sender's SFU",
                         {fromPeer:fromPeer,originPeerId:data.originPeerId,originStreamId:data.originStreamId});
 
                         let lastSFU = getLastSFU(peers);
 
                         if(lastSFU.id !== data.originPeerId && lastSFU.id !== fromPeer.id){
 
-                            console.log("peer_stream_loaded -- testing if stream is already present on the last SFU",
+                            logger.info("peer_stream_loaded -- testing if stream is already present on the last SFU",
                             {fromPeer:fromPeer,lastSFU:lastSFU,originPeerId:data.originPeerId,originStreamId:data.originStreamId});
 
                             let streamAlreadyLoadedInLastSFU = peer.streamAlreadyLoaded(lastSFU,data.originPeerId,data.originStreamId);
@@ -2003,14 +1854,14 @@ io.on("connection", (socket) => {
                                     sessionId: data.sessionId
                                 };
                     
-                                console.log("peer_stream_loaded -- sending request_stream event to last SFU",
+                                logger.info("peer_stream_loaded -- sending request_stream event to last SFU",
                                 {fromPeer:fromPeer,lastSFU:lastSFU,rsDataLast:rsDataLast});
                     
                                 io.to(sfuSockId).emit("request_stream", rsDataLast);
 
                             }else{
 
-                                console.log("peer_stream_loaded -- stream already added to last SFU...relay finished",
+                                logger.info("peer_stream_loaded -- stream already added to last SFU...relay finished",
                                     {fromPeer:fromPeer,lastSFU:lastSFU,originPeerId:data.originPeerId,originStreamId:data.originStreamId});
 
 
@@ -2019,7 +1870,7 @@ io.on("connection", (socket) => {
                                     let autoRelay = originStreamRef.label === "camera" || 
                                     (originStreamRef.label !== "camera" && peers[data.originPeerId].mainPresenter);
             
-                                    console.log("peer_stream_loaded -- determine if should auto-relay this stream to origin's non sfu assigned peers",{
+                                    logger.info("peer_stream_loaded -- determine if should auto-relay this stream to origin's non sfu assigned peers",{
                                         data,peers,autoRelay
                                     });
                                     
@@ -2030,7 +1881,7 @@ io.on("connection", (socket) => {
                                             !peer.streamAlreadyLoaded(peers[p],data.originPeerId,data.originStreamId);
                                         });
                         
-                                        console.log("peer_stream_loaded -- resultado de pendingPeerIds",{ppIds:pendingPeerIds,origin:data.originPeerId,streamId: data.originStreamId});
+                                        logger.info("peer_stream_loaded -- resultado de pendingPeerIds",{ppIds:pendingPeerIds,origin:data.originPeerId,streamId: data.originStreamId});
                                         pendingPeerIds.forEach( p => {
                                             let sfuSockId = socketIdMapping[p];
                                 
@@ -2042,7 +1893,7 @@ io.on("connection", (socket) => {
                                                 sessionId: data.sessionId
                                             };
                                 
-                                            console.log("peer_stream_loaded -- sending request_stream to this peer",
+                                            logger.info("peer_stream_loaded -- sending request_stream to this peer",
                                             {fromPeer:fromPeer,peer:peers[p],rsDataPending:rsDataPending});
                                 
                                             io.to(sfuSockId).emit("request_stream", rsDataPending);
@@ -2055,7 +1906,7 @@ io.on("connection", (socket) => {
 
                         }else if(lastSFU.id === data.originPeerId){
 
-                            console.log("peer_stream_loaded -- last SFU is the origin of this stream...sending its peers the request_stream event",
+                            logger.info("peer_stream_loaded -- last SFU is the origin of this stream...sending its peers the request_stream event",
                             {fromPeer:fromPeer,lastSFU:lastSFU,originPeerId:data.originPeerId,originStreamId:data.originStreamId});
                         
                             let pendingPeerIds = Object.keys(peers).filter( p => {
@@ -2063,7 +1914,7 @@ io.on("connection", (socket) => {
                                 !peer.streamAlreadyLoaded(peers[p],data.originPeerId,data.originStreamId);
                             });
             
-                            console.log("peer_stream_loaded -- resultado de pendingPeerIds",{ppIds:pendingPeerIds,origin:data.originPeerId,streamId: data.originStreamId});
+                            logger.info("peer_stream_loaded -- resultado de pendingPeerIds",{ppIds:pendingPeerIds,origin:data.originPeerId,streamId: data.originStreamId});
                             pendingPeerIds.forEach( p => {
                                 let sfuSockId = socketIdMapping[p];
                     
@@ -2074,20 +1925,20 @@ io.on("connection", (socket) => {
                                     sessionId: data.sessionId
                                 };
                     
-                                console.log("peer_stream_loaded -- sending request_stream to this peer",
+                                logger.info("peer_stream_loaded -- sending request_stream to this peer",
                                 {fromPeer:fromPeer,peer:peers[p],rsDataPending:rsDataPending});
                     
                                 io.to(sfuSockId).emit("request_stream", rsDataPending);
                             });
 
-                            // console.log("peer_stream_loaded -- origin peer is the same as last SFU...no relay needed",
+                            // logger.info("peer_stream_loaded -- origin peer is the same as last SFU...no relay needed",
                             //     {fromPeer:fromPeer,lastSFU:lastSFU,originPeerId:data.originPeerId,originStreamId:data.originStreamId});
                         }
 
                         
                     }
                 }else{
-                    console.warn("peer_stream_loaded -- target SFU not defined!",{
+                    logger.warn("peer_stream_loaded -- target SFU not defined!",{
                         data:data,
                         fromPeer:fromPeer
                     });  
@@ -2096,7 +1947,7 @@ io.on("connection", (socket) => {
 
             }else{
                 
-                console.debug("peer_stream_loaded -- sender's assigned SFU is the same as the origin peer of this stream",{
+                logger.debug("peer_stream_loaded -- sender's assigned SFU is the same as the origin peer of this stream",{
                     data:data,
                     fromPeer:fromPeer
                 });
@@ -2116,12 +1967,12 @@ io.on("connection", (socket) => {
                                 sessionId: data.sessionId
                             };
                 
-                            console.log("peer_stream_loaded -- sending request_stream event to last SFU",
+                            logger.info("peer_stream_loaded -- sending request_stream event to last SFU",
                             {fromPeer:fromPeer,lastSFU:lastSFU,rsDataLast:rsDataLast});
                 
                             io.to(sfuSockId).emit("request_stream", rsDataLast);
                     }else{
-                        console.log("peer_stream_loaded -- stream already added to last SFU...relay finished",
+                        logger.info("peer_stream_loaded -- stream already added to last SFU...relay finished",
                         {fromPeer:fromPeer,lastSFU:lastSFU,originPeerId:data.originPeerId,originStreamId:data.originStreamId});
 
 
@@ -2130,7 +1981,7 @@ io.on("connection", (socket) => {
                         let autoRelay = originStreamRef.label === "camera" || 
                         (originStreamRef.label !== "camera" && peers[data.originPeerId].mainPresenter);
 
-                        console.log("peer_stream_loaded -- determine if should auto-relay this stream to origin's non sfu assigned peers",{
+                        logger.info("peer_stream_loaded -- determine if should auto-relay this stream to origin's non sfu assigned peers",{
                             data,peers,autoRelay
                         });
 
@@ -2141,7 +1992,7 @@ io.on("connection", (socket) => {
                                 !peer.streamAlreadyLoaded(peers[p],data.originPeerId,data.originStreamId);
                             });
             
-                            console.log("peer_stream_loaded -- resultado de pendingPeerIds",{ppIds:pendingPeerIds,origin:data.originPeerId,streamId: data.originStreamId});
+                            logger.info("peer_stream_loaded -- resultado de pendingPeerIds",{ppIds:pendingPeerIds,origin:data.originPeerId,streamId: data.originStreamId});
                             pendingPeerIds.forEach( p => {
                                 let sfuSockId = socketIdMapping[p];
                     
@@ -2153,7 +2004,7 @@ io.on("connection", (socket) => {
                                     sessionId: data.sessionId
                                 };
                     
-                                console.log("peer_stream_loaded -- sending request_stream to this peer",
+                                logger.info("peer_stream_loaded -- sending request_stream to this peer",
                                 {fromPeer:fromPeer,peer:peers[p],rsDataPending:rsDataPending});
                     
                                 io.to(sfuSockId).emit("request_stream", rsDataPending);
@@ -2175,7 +2026,7 @@ io.on("connection", (socket) => {
                             !peer.streamAlreadyLoaded(peers[p],data.originPeerId,data.originStreamId);
                         });
         
-                        console.log("peer_stream_loaded -- resultado de pendingPeerIds",{ppIds:pendingPeerIds,origin:data.originPeerId,streamId: data.originStreamId});
+                        logger.info("peer_stream_loaded -- resultado de pendingPeerIds",{ppIds:pendingPeerIds,origin:data.originPeerId,streamId: data.originStreamId});
                         pendingPeerIds.forEach( p => {
                             let sfuSockId = socketIdMapping[p];
                 
@@ -2187,7 +2038,7 @@ io.on("connection", (socket) => {
                                 sessionId: data.sessionId
                             };
                 
-                            console.log("peer_stream_loaded -- sending request_stream to this peer",
+                            logger.info("peer_stream_loaded -- sending request_stream to this peer",
                             {fromPeer:fromPeer,peer:peers[p],rsDataPending:rsDataPending});
                 
                             io.to(sfuSockId).emit("request_stream", rsDataPending);
@@ -2224,7 +2075,7 @@ io.on("connection", (socket) => {
                 
                             // };
 
-                            // console.log("peer_stream_loaded -- sending send_peer_stream event to peer's assigned SFU",{sfu:data.peerId,data2: data2});
+                            // logger.info("peer_stream_loaded -- sending send_peer_stream event to peer's assigned SFU",{sfu:data.peerId,data2: data2});
                                 
                             // io.to(targetSocketId).emit("send_peer_stream", data2);
                             // remains = remains - 1; 
@@ -2240,13 +2091,13 @@ io.on("connection", (socket) => {
                                 sessionId: data.sessionId
                             };
                 
-                            console.log("peer_stream_loaded -- sending request_stream to this peer",
+                            logger.info("peer_stream_loaded -- sending request_stream to this peer",
                             {fromPeer:fromPeer,peer:peers[p],rsData:rsData});
                 
                             io.to(targetSocketId).emit("request_stream", rsData);
 
                         }else{
-                            console.debug("peer_stream_loaded -- stream already loaded on target peer",{
+                            logger.debug("peer_stream_loaded -- stream already loaded on target peer",{
                                 sfu: data.peerId,
                                 peerId: p,
                                 target: data.originPeerId,
@@ -2260,7 +2111,7 @@ io.on("connection", (socket) => {
         
                 });
             }else{
-                console.warn("this sfu does not have available peer connections remaining",{
+                logger.warn("this sfu does not have available peer connections remaining",{
                     peerId:data.peerId,
                     maxConnectedPeers: peers[data.peerId].capabilities.maxConnectedPeers,
                     //currConnPeers:currConnPeers
@@ -2275,8 +2126,8 @@ io.on("connection", (socket) => {
     });
 
     // socket.on("cloned_stream", async data => {
-    //     // console.log("peer_webrtc_message",{data:data});
-    //     console.log("cloned_stream -- starting...",{data:data});
+    //     // logger.info("peer_webrtc_message",{data:data});
+    //     logger.info("cloned_stream -- starting...",{data:data});
 
     //         let targetSocketId = socketIdMapping[data.target];
 
@@ -2304,7 +2155,7 @@ io.on("connection", (socket) => {
     
     //         await memoryDBAPI.updateMergeById("session_peers", data.peerId, { upstream: peer.upstream });
 
-    //         console.log("cloned_stream -- sending cloned_stream event to target peer",{sfu:data.peerId,data2: data2});
+    //         logger.info("cloned_stream -- sending cloned_stream event to target peer",{sfu:data.peerId,data2: data2});
 
     //         io.to(targetSocketId).emit("cloned_stream", data2);
 
@@ -2314,8 +2165,8 @@ io.on("connection", (socket) => {
 
 
     socket.on("end_of_stream_relay_chain", async data => {
-        // console.log("peer_webrtc_message",{data:data});
-        console.log("end_of_stream_relay_chain -- starting...",{data:data});
+        // logger.info("peer_webrtc_message",{data:data});
+        logger.info("end_of_stream_relay_chain -- starting...",{data:data});
 
             //let peer = await memoryDBAPI.findById("session_peers",data.peerId);
             let peers = await memoryDBAPI.queryCollection("session_peers", [
@@ -2326,7 +2177,7 @@ io.on("connection", (socket) => {
             let originPeer = peers[data.originPeerId];
             //let originSFU = peers[originPeer.assignedSFU];
 
-            console.log("end_of_stream_relay_chain -- lastSFU and originPeer ",{lsfu:lastSFU,oPeer:originPeer});
+            logger.info("end_of_stream_relay_chain -- lastSFU and originPeer ",{lsfu:lastSFU,oPeer:originPeer});
 
             if(!originPeer.sfu && originPeer.assignedSFU !== lastSFU.id && peers[lastSFU.assignedSFU].assignedSFU !== lastSFU.id ){
                 
@@ -2339,11 +2190,11 @@ io.on("connection", (socket) => {
                     sessionId: data.sessionId
                 };
     
-                console.log("end_of_stream_relay_chain -- sending request_stream event to target peer",{sfu:data.peerId,data2:data2});
+                logger.info("end_of_stream_relay_chain -- sending request_stream event to target peer",{sfu:data.peerId,data2:data2});
     
                 io.to(targetSocketId).emit("request_stream", data2);
             }else{
-                console.log("end_of_stream_relay_chain -- won't send request_stream ",{data:data,lsfu:lastSFU,oPeer:originPeer});
+                logger.info("end_of_stream_relay_chain -- won't send request_stream ",{data:data,lsfu:lastSFU,oPeer:originPeer});
             }   
 
 
@@ -2352,7 +2203,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on("peer_stream_requested", async data => {
-        console.log("peer_stream_requested -- starting ",{data:data});
+        logger.info("peer_stream_requested -- starting ",{data:data});
         let peers = await memoryDBAPI.queryCollection("session_peers", [
             { "field": "session_id", "operator": "==", "value": data.sessionId }
         ]);
@@ -2360,14 +2211,14 @@ io.on("connection", (socket) => {
         //getConnectedStreamsPerSFU(data.peerId,peers);
 
         let candidatePeerIds = Object.keys(peers).filter(p => {
-            //console.log("peer_stream_requested -- filtering peers ",{p: p, currPeer: peers[p] });
+            //logger.info("peer_stream_requested -- filtering peers ",{p: p, currPeer: peers[p] });
             // if(peers[p].sfu &&  p !== data.peerId && p !== data.target && peers[p] && peers[p].totalConnectedStreams && peers[p].totalConnectedStreams.indexOf(data.streamId) !== -1){
                 if(peers[p].sfu &&  p !== data.peerId && p !== data.target && peers[p] && peer.streamAlreadyLoaded(peers[p],data.target,data.streamId)){
                 return true;
             }
         })
         // .filter(sfu => {
-        //     console.debug("peer_stream_requested -- filtering out maxRelay",{
+        //     logger.debug("peer_stream_requested -- filtering out maxRelay",{
         //         sfu:sfu,
         //         currConn:peers[sfu].totalConnectedStreams ? peers[sfu].totalConnectedStreams.length: null,
         //         maxRelay:peers[sfu].maxRelay
@@ -2379,7 +2230,7 @@ io.on("connection", (socket) => {
             // let bQty = peers[b].totalConnectedStreams ? peers[b].totalConnectedStreams.length: 0;
             let aQty = peers[a].upstream ? countUpstreamPeers(peers[a].upstream): 0;
             let bQty = peers[b].upstream ? countUpstreamPeers(peers[b].upstream): 0;
-            console.log("peer_stream_requested -- sorting peers ",{a: a,b:b,aQty:aQty,bQty:bQty,peers: JSON.stringify(peers,null,2)});
+            logger.info("peer_stream_requested -- sorting peers ",{a: a,b:b,aQty:aQty,bQty:bQty,peers: JSON.stringify(peers,null,2)});
 
             if(aQty < bQty){
                 return -1;
@@ -2390,7 +2241,7 @@ io.on("connection", (socket) => {
             }
         });
 
-        console.log("peer_stream_requested -- resulting candidate peer ids ",{candidatePeerIds: candidatePeerIds});
+        logger.info("peer_stream_requested -- resulting candidate peer ids ",{candidatePeerIds: candidatePeerIds});
 
         let selectedPeerId = candidatePeerIds ? candidatePeerIds[0] : null;
 
@@ -2402,12 +2253,12 @@ io.on("connection", (socket) => {
             data.targetLocalStreams[data.streamId] = peers[data.target].localStreams[data.streamId];
                 
 
-            console.log("peer_stream_requested -- we have a source peer id to ask for target's streams",{selected:selectedPeerId,data: data});
+            logger.info("peer_stream_requested -- we have a source peer id to ask for target's streams",{selected:selectedPeerId,data: data});
 
             io.to(targetSocketId).emit("send_peer_stream", data);
 
         }else{
-            console.warn("peer_stream_requested -- could not find a sourcePeerId for the target's streams",
+            logger.warn("peer_stream_requested -- could not find a sourcePeerId for the target's streams",
             {peerId: data.peerId,target:data.target});
         }
 
@@ -2422,12 +2273,12 @@ io.on("connection", (socket) => {
 
         //     data.targetLocalStreams = peers[data.target].localStreams;
 
-        //     console.log("peer_stream_requested -- sending send_peer_stream to SFU to ask for target's streams",{peerId: data.peerId,peerSFU:peer.assignedSFU,data: data});
+        //     logger.info("peer_stream_requested -- sending send_peer_stream to SFU to ask for target's streams",{peerId: data.peerId,peerSFU:peer.assignedSFU,data: data});
 
         //     io.to(targetSocketId).emit("send_peer_stream", data);
 
         // }else{
-        //     console.warn("peer_stream_requested -- could not find peer or this peer does not have an SFU assigned yet",{data:data,peer:peer});
+        //     logger.warn("peer_stream_requested -- could not find peer or this peer does not have an SFU assigned yet",{data:data,peer:peer});
         // }
         
 
@@ -2436,7 +2287,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on("leave", async (data,callback) => {
-        console.debug("peer leaving - " + data.userId + " " + data.roomId);
+        logger.debug("peer leaving - " + data.userId + " " + data.roomId);
         
         await removePeerFromSession(socket.handshake.query.room_id, socket.handshake.query.peer_id);
        
@@ -2448,14 +2299,14 @@ io.on("connection", (socket) => {
 
     // Leave the room if the user closes the socket
     socket.on("disconnect", async () => {
-        console.log(`Client ${socket.id} diconnected`);
+        logger.info(`Client ${socket.id} diconnected`);
         disconnectionTimeouts[socket.handshake.query.peer_id] = setTimeout(() => {
             removePeerFromSession(socket.handshake.query.room_id, socket.handshake.query.peer_id);
         },10000);
     });
 
     socket.on("error", (e) => {
-        console.log(e);
+        logger.info(e);
     });
 
 
