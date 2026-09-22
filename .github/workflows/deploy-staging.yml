@@ -83,7 +83,6 @@ jobs:
     needs: [test, build-frontend]
     environment:
       name: staging
-      url: http://${{ secrets.STAGING_SERVER_IP }}
 
     steps:
       - name: Checkout code
