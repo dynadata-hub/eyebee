@@ -119,7 +119,7 @@ jobs:
 
       - name: Setup and restart services
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=10 \
             ${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_SERVER_IP }} << 'ENDSSH'
             set -e
             cd /opt/eyebee-staging
@@ -129,13 +129,13 @@ jobs:
 
             # Remove SSL/domain config (staging uses IP only)
             sed -i '/LETSENCRYPT_HOST/d' docker-compose.yml
-            sed -i 's/VIRTUAL_HOST=.*/VIRTUAL_HOST=_/' docker-compose.yml
+            sed -i "s/VIRTUAL_HOST=.*/VIRTUAL_HOST=${{ secrets.STAGING_SERVER_IP }}/" docker-compose.yml
             docker compose rm -sf letsencrypt 2>/dev/null || true
 
             # Create .env if missing
             if [ ! -f .env ]; then
               cat > .env << EOF
-          DOMAIN=_
+          DOMAIN=${{ secrets.STAGING_SERVER_IP }}
           NODE_ENV=staging
           EOF
             fi
