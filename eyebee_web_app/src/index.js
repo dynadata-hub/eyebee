@@ -1,13 +1,20 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { ThemeProvider as MuiStylesThemeProvider } from '@mui/styles';
+import { createTheme } from '@mui/material/styles';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
+// Default theme for @mui/styles makeStyles compatibility
+const defaultTheme = createTheme();
+
 const root = createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <MuiStylesThemeProvider theme={defaultTheme}>
+      <App />
+    </MuiStylesThemeProvider>
   </React.StrictMode>
 );
 
