@@ -1,9 +1,11 @@
 class SpeedTest {
 
-    constructor(config){
-        this.config = config || {
-            testFile: 'https://livelatency.com/speedtest/download/500mb.bin',
-            uploadEndpoint: 'https://livelatency.com/speedtest/upload',
+    constructor(extConfig){
+        const appConfig = typeof window !== 'undefined' ? (window.__EYEBEE_CONFIG__ || {}) : {};
+        this.config = extConfig || {
+            testFile: appConfig.speedTestDownload || '/speedtest/download/500mb.bin',
+            uploadEndpoint: appConfig.speedTestUpload || '/speedtest/upload',
+            pingEndpoint: appConfig.speedTestPing || '/speedtest/ping',
             targetTime: 14 * 1000, 
             negotiationSize: 1024 * 1024 * 5, // 5 MByte
         };
@@ -16,7 +18,7 @@ class SpeedTest {
             abortController.abort();
         },abortTimeout || 5000);
 
-        await fetch("https://livelatency.com/speedtest/ping",{
+        await fetch(this.config.pingEndpoint,{
             signal: abortController.signal,
             cache: "no-store"
         });

@@ -22,6 +22,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import LinkIcon from '@mui/icons-material/Link';
 import crypto from 'crypto-js';
+import config from '../config';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
@@ -113,7 +114,7 @@ const LinksRooms = (props) => {
 
 
     useEffect(() => {
-        let mainLink = `https://livelatency.com/videocall/${props.room_id}`;
+        let mainLink = `${config.appBaseUrl}/videocall/${props.room_id}`;
         const paramsM = crypto.AES.encrypt(smallRoom ? "owner=true&presenter=true&testDisabled=true&sfu=true" : "owner=true&presenter=true", "human hive eyebee").toString();
         
         const paramsP = crypto.AES.encrypt(smallRoom ? "presenter=true&testDisabled=true&sfu=true" : "presenter=true", "human hive eyebee").toString();

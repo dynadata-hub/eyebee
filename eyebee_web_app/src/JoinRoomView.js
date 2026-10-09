@@ -26,6 +26,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import MediaPlayerWidget from "./MediaPlayerWidget";
 import logoEyeBee from "./img/logo_eyebee_fondo_negrov2.jpg";
 import PeerTestWidget from "./peerTest/PeerTestWidget";
+import config from './config';
 
 import axios from 'axios';
 
@@ -213,17 +214,7 @@ const JoinRoomView = (props) => {
     const [roomManager, setRoomManager] = useState(null);
     const [natType, setNATType] = useState();
     const [webRTCTest, setWebRTCTest] = useState(null);
-    const [webRTCConfig, setWebRTCConfig] = useState([
-        { 'urls': 'stun:stun.l.google.com:19302' },
-        { 'urls': 'stun:stun1.l.google.com:19302' },
-        { 'urls': 'stun:stun2.l.google.com:19302' },
-        { 'urls': 'stun:stun3.l.google.com:19302' },
-        {
-            urls: "turn:livelatency.com",
-            username: "immersiveclass",
-            credential: "1mm3r51v3c1455"
-        }
-    ]);
+    const [webRTCConfig, setWebRTCConfig] = useState(config.getIceServers());
 
 
     const xsScreen = useMediaQuery(theme.breakpoints.up("xs"));

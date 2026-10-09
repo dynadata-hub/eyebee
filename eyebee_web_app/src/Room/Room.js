@@ -13,6 +13,7 @@ import MediaPlayerWidget from "../MediaPlayerWidget";
 import RoomActionsWidget from "./RoomActionsWidget";
 
 import WebRTCManager from "../WebRTCManager";
+import config from '../config';
 import RTCPeerConnectionFactory from "../RTCPeerConnectionFactory";
 import RTCIceCandidateFactory from "../RTCIceCandidateFactory";
 import SideBoxWidget from "./SideBoxWidget";
@@ -870,14 +871,7 @@ const Room = (props) => {
 
     let wrtcManager = new WebRTCManager(props.userData.peerId, props.userData.roomId, rtcPeerConnFactory,
       rtcIceCandidateFactory, props.wsSocket, {
-      'iceServers': [
-        { 'urls': 'stun:stun.l.google.com:19302' },
-        {
-          urls: "turn:livelatency.com",
-          username: "immersiveclass",
-          credential: "1mm3r51v3c1455"
-        }
-      ]
+      'iceServers': config.getIceServers()
     }, {});
     //preferredVideoCodecs: ["video/VP9", "video/VP8", "video/H264"]
 
