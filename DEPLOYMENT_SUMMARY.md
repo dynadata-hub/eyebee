@@ -2,23 +2,23 @@
 
 ## ✅ Cambios Realizados
 
-Se han agregado al repositorio los archivos necesarios para desplegar eyebee con el dominio `live.eyebee.com`:
+Se han agregado al repositorio los archivos necesarios para desplegar eyebee con el dominio `immersiveweb.es`:
 
 ### 1. **docker-compose.production.yml**
 - Configuración de producción con nginx-proxy
 - Soporte para múltiples dominios mediante variables de entorno
 - SSL automático con Let's Encrypt (acme-companion)
 - Dominios configurables:
-  - `live.eyebee.com` → Aplicación web principal
-  - `api.live.eyebee.com` → API WebRTC Sessions
-  - `speedtest.live.eyebee.com` → Servidor de speed test
+  - `immersiveweb.es` → Aplicación web principal
+  - `api.immersiveweb.es` → API WebRTC Sessions
+  - `speedtest.immersiveweb.es` → Servidor de speed test
 
 ### 2. **.env.production.example**
 Plantilla de variables de entorno que incluye:
 ```bash
-DOMAIN=live.eyebee.com
-API_DOMAIN=api.live.eyebee.com
-SPEEDTEST_DOMAIN=speedtest.live.eyebee.com
+DOMAIN=immersiveweb.es
+API_DOMAIN=api.immersiveweb.es
+SPEEDTEST_DOMAIN=speedtest.immersiveweb.es
 LETSENCRYPT_EMAIL=admin@eyebee.com
 ```
 
@@ -68,19 +68,19 @@ docker compose up -d
 ### Paso 3: Verificar DNS
 Asegúrate de que estos subdominios apunten a `164.92.212.133`:
 ```bash
-dig live.eyebee.com +short
-dig api.live.eyebee.com +short
-dig speedtest.live.eyebee.com +short
+dig immersiveweb.es +short
+dig api.immersiveweb.es +short
+dig speedtest.immersiveweb.es +short
 ```
 
-✅ **Ya verificado**: `live.eyebee.com` → `164.92.212.133`
+✅ **Ya verificado**: `immersiveweb.es` → `164.92.212.133`
 
 ### Paso 4: Probar la aplicación
 Después del deployment, verifica:
 ```bash
-curl -I https://live.eyebee.com
-curl -I https://api.live.eyebee.com
-curl -I https://speedtest.live.eyebee.com
+curl -I https://immersiveweb.es
+curl -I https://api.immersiveweb.es
+curl -I https://speedtest.immersiveweb.es
 ```
 
 ## 📝 Notas Importantes
@@ -99,8 +99,8 @@ VIRTUAL_HOST=164.92.212.133
 
 ### Ahora (Dominio):
 ```yaml
-VIRTUAL_HOST=${DOMAIN:-live.eyebee.com}
-LETSENCRYPT_HOST=${DOMAIN:-live.eyebee.com}
+VIRTUAL_HOST=${DOMAIN:-immersiveweb.es}
+LETSENCRYPT_HOST=${DOMAIN:-immersiveweb.es}
 ```
 
 ## 📚 Documentación
@@ -112,7 +112,7 @@ LETSENCRYPT_HOST=${DOMAIN:-live.eyebee.com}
 ## ✅ Commit Realizado
 
 ```
-feat: add production deployment configuration for live.eyebee.com
+feat: add production deployment configuration for immersiveweb.es
 
 - Add docker-compose.production.yml with domain-based routing
 - Add nginx-proxy with automatic SSL via Let's Encrypt

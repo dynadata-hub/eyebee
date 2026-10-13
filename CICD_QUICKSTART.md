@@ -30,7 +30,7 @@ Agrega estos 8 secrets:
 | `SSH_USER` | `algol` |
 | `PRODUCTION_SERVER_IP` | `164.92.212.133` |
 | `PRODUCTION_SERVER_IPV6` | `2a03:b0c0:2:f0:0:1:49e8:7001` |
-| `DOMAIN` | `live.eyebee.com` |
+| `DOMAIN` | `immersiveweb.es` |
 | `LETSENCRYPT_EMAIL` | `admin@eyebee.com` |
 | `FIREBASE_PROJECT_ID` | `eyebee-718a0` |
 | `FIREBASE_STORAGE_BUCKET` | `eyebee-718a0.appspot.com` |

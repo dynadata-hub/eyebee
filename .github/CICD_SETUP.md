@@ -37,9 +37,9 @@ Agrega los siguientes secrets uno por uno:
 
 | Secret Name | Valor |
 |-------------|-------|
-| `DOMAIN` | `live.eyebee.com` |
-| `API_DOMAIN` | `api.live.eyebee.com` |
-| `SPEEDTEST_DOMAIN` | `speedtest.live.eyebee.com` |
+| `DOMAIN` | `immersiveweb.es` |
+| `API_DOMAIN` | `api.immersiveweb.es` |
+| `SPEEDTEST_DOMAIN` | `speedtest.immersiveweb.es` |
 | `LETSENCRYPT_EMAIL` | Tu email para Let's Encrypt (ej: `admin@eyebee.com`) |
 
 #### Secrets de Firebase
@@ -158,7 +158,7 @@ También puedes ejecutar el workflow manualmente:
 Después de que el workflow termine:
 
 1. Verifica el estado final (✅ verde = éxito)
-2. Visita https://live.eyebee.com para confirmar
+2. Visita https://immersiveweb.es para confirmar
 3. Revisa los logs del servidor si es necesario:
 
 ```bash

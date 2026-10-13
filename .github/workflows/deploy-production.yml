@@ -83,7 +83,7 @@ jobs:
     needs: [test, build-frontend]
     environment:
       name: production
-      url: https://live.eyebee.com
+      url: https://immersiveweb.es
     
     steps:
       - name: Checkout code
@@ -214,7 +214,7 @@ jobs:
           sleep 10
           
           # Check if main domain is accessible
-          if curl -s -o /dev/null -w "%{http_code}" https://live.eyebee.com | grep -q "200\|301\|302"; then
+          if curl -s -o /dev/null -w "%{http_code}" https://immersiveweb.es | grep -q "200\|301\|302"; then
             echo "✅ Main site is accessible"
           else
             echo "⚠️ Main site may not be accessible yet"
@@ -236,7 +236,7 @@ jobs:
         if: needs.deploy.result == 'success'
         run: |
           echo "🎉 Deployment to production successful!"
-          echo "📍 URL: https://live.eyebee.com"
+          echo "📍 URL: https://immersiveweb.es"
           
       - name: Deployment Failed
         if: needs.deploy.result == 'failure'

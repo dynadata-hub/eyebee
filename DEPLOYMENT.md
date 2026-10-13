@@ -1,6 +1,6 @@
 # Deployment Guide for eyebee
 
-Este documento describe cómo desplegar eyebee en producción usando el dominio `live.eyebee.com`.
+Este documento describe cómo desplegar eyebee en producción usando el dominio `immersiveweb.es`.
 
 ## Configuración de DNS
 
@@ -8,15 +8,15 @@ Asegúrate de que los siguientes registros DNS estén configurados:
 
 | Dominio | Tipo | Valor |
 |---------|------|-------|
-| live.eyebee.com | A | 164.92.212.133 |
-| api.live.eyebee.com | A | 164.92.212.133 |
-| speedtest.live.eyebee.com | A | 164.92.212.133 |
+| immersiveweb.es | A | 164.92.212.133 |
+| api.immersiveweb.es | A | 164.92.212.133 |
+| speedtest.immersiveweb.es | A | 164.92.212.133 |
 
 Puedes verificar con:
 ```bash
-dig live.eyebee.com +short
-dig api.live.eyebee.com +short
-dig speedtest.live.eyebee.com +short
+dig immersiveweb.es +short
+dig api.immersiveweb.es +short
+dig speedtest.immersiveweb.es +short
 ```
 
 ## Archivos de Configuración
@@ -137,9 +137,9 @@ docker compose logs nginx-proxy-acme
 ### 4. Probar endpoints
 ```bash
 # Desde tu máquina local
-curl -I https://live.eyebee.com
-curl -I https://api.live.eyebee.com
-curl -I https://speedtest.live.eyebee.com
+curl -I https://immersiveweb.es
+curl -I https://api.immersiveweb.es
+curl -I https://speedtest.immersiveweb.es
 ```
 
 ## Configuración de Variables de Entorno
@@ -148,9 +148,9 @@ Edita `/opt/eyebee/.env` en el servidor con los valores correctos:
 
 ```bash
 # Dominios
-DOMAIN=live.eyebee.com
-API_DOMAIN=api.live.eyebee.com
-SPEEDTEST_DOMAIN=speedtest.live.eyebee.com
+DOMAIN=immersiveweb.es
+API_DOMAIN=api.immersiveweb.es
+SPEEDTEST_DOMAIN=speedtest.immersiveweb.es
 
 # Let's Encrypt
 LETSENCRYPT_EMAIL=tu-email@eyebee.com
