@@ -127,18 +127,16 @@ jobs:
             # Use production template as base
             cp docker-compose.production.yml docker-compose.yml
 
-            # Remove SSL/domain config (staging uses IP only)
-            sed -i '/LETSENCRYPT_HOST/d' docker-compose.yml
-            sed -i "s/VIRTUAL_HOST=.*/VIRTUAL_HOST=${{ secrets.STAGING_SERVER_IP }}/" docker-compose.yml
-            docker compose rm -sf letsencrypt 2>/dev/null || true
+            # Set domain for staging
+            sed -i 's/VIRTUAL_HOST=.*/VIRTUAL_HOST=immersiveweb.es/' docker-compose.yml
+            sed -i 's/LETSENCRYPT_HOST=.*/LETSENCRYPT_HOST=immersiveweb.es/' docker-compose.yml
 
-            # Create .env if missing
-            if [ ! -f .env ]; then
-              cat > .env << EOF
-          DOMAIN=${{ secrets.STAGING_SERVER_IP }}
+            # Create/update .env
+            cat > .env << EOF
+          DOMAIN=immersiveweb.es
+          LETSENCRYPT_EMAIL=development@immersivepro.es
           NODE_ENV=staging
           EOF
-            fi
 
             # Fix permissions
             for dir in webrtc_sessions/node_modules speed_test_server/node_modules; do
@@ -170,13 +168,17 @@ jobs:
 
       - name: Verify deployment
         run: |
-          sleep 10
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.STAGING_SERVER_IP }} || echo "000")
-          echo "HTTP response: $HTTP_CODE"
-          if echo "$HTTP_CODE" | grep -qE "200|301|302"; then
+          sleep 20
+          # Check via IP first
+          HTTP_IP=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 http://${{ secrets.STAGING_SERVER_IP }} || echo "000")
+          echo "HTTP via IP: $HTTP_IP"
+          # Check via domain (may take time for SSL cert)
+          HTTP_DOMAIN=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 https://immersiveweb.es || echo "000")
+          echo "HTTP via domain: $HTTP_DOMAIN"
+          if echo "$HTTP_IP$HTTP_DOMAIN" | grep -qE "200|301|302"; then
             echo "Staging is accessible"
           else
-            echo "Staging may not be ready yet (HTTP $HTTP_CODE)"
+            echo "Staging may not be ready yet (SSL cert may still be provisioning)"
           fi
 
       - name: Cleanup SSH key
