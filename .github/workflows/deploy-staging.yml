@@ -101,6 +101,12 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.STAGING_SERVER_IP }} >> ~/.ssh/known_hosts
 
+      - name: Fix remote permissions before deploy
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_SERVER_IP }} \
+            'sudo chown -R $USER:$USER /opt/eyebee-staging 2>/dev/null || true'
+
       - name: Deploy code to staging server
         run: |
           rsync -avz --delete \
