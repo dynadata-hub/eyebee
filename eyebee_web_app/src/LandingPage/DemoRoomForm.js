@@ -180,9 +180,9 @@ const DemoRoomForm = props => {
                                         }}>
                                             {
                                                 largeRoom ? 
-                                                "The session can scale beyond 5 participants. This mode requires a certain number of peers to have good device capabilities."
+                                                "The session can scale beyond 7 participants. This mode requires a certain number of peers to have good device capabilities."
                                                 :
-                                                "Allows anyone to join the session regardless of their device's capabilities. Suitable for a small number of participants (5 max)."
+                                                "Allows anyone to join the session regardless of their device's capabilities. Suitable for a small number of participants (7 max)."
                                                 
                                             }
                                         </Typography>

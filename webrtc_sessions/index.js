@@ -1239,12 +1239,14 @@ io.on("connection", (socket) => {
 
                 if(data.userData.smallRoom){
 
+                    const maxSmallRoomPeers = parseInt(process.env.MAX_SMALL_ROOM_PEERS) || 7;
+
                     await memoryDBAPI.insert("sessions", data.roomId, {
                         id:data.roomId,
                         smallRoom: data.userData.smallRoom,
                         owner: data.userId,
                         participants: 1,
-                        maxPeers:5
+                        maxPeers: maxSmallRoomPeers
                     });
 
                     session = {
@@ -1252,7 +1254,7 @@ io.on("connection", (socket) => {
                         smallRoom: data.userData.smallRoom,
                         owner: data.userId,
                         participants: 1,
-                        maxPeers:5
+                        maxPeers: maxSmallRoomPeers
                     };
 
                     setAsOwner = true;
